@@ -329,6 +329,14 @@ public:
        outside.  */
    void GradToDiv(Vector &div);
 
+   void EliminateRow(int row, const double sol, Vector &rhs);
+   void EliminateRow(int row, DiagonalPolicy dpolicy = DIAG_ZERO);
+   void EliminateCol(int col, const double sol, Vector &rhs);
+   void EliminateCol(int col, DiagonalPolicy dpolicy = DIAG_ZERO);
+   void EliminateRowCol(int rc, const double sol, Vector &rhs,
+                        DiagonalPolicy dpolicy = DIAG_ONE);
+   void EliminateRowCol(int rc, DiagonalPolicy dpolicy = DIAG_ONE);
+
    /// Copy rows row1 through row2 from A to *this
    void CopyRows(const DenseMatrix &A, int row1, int row2);
    /// Copy columns col1 through col2 from A to *this

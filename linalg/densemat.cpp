@@ -1503,6 +1503,145 @@ void DenseMatrix::GradToDiv(Vector &div)
    }
 }
 
+void DenseMatrix::EliminateRow(int row, const double sol, Vector &rhs)
+{
+   MFEM_ASSERT(row < height && row >= 0,
+               "Row " << row << " not in matrix of height " << height);
+
+   for (int j = 0; j < width; j++)
+   {
+      rhs(j) -= sol * (*this)(row, j);
+      (*this)(row, j) = 0.0;
+   }
+}
+
+void DenseMatrix::EliminateRow(int row, DiagonalPolicy dpolicy)
+{
+   MFEM_ASSERT(row < height && row >= 0,
+               "Row " << row << " not in matrix of height " << height);
+   MFEM_ASSERT(dpolicy != DIAG_KEEP, "Diagonal policy must not be DIAG_KEEP");
+   MFEM_ASSERT(dpolicy != DIAG_ONE || height == width,
+               "if dpolicy == DIAG_ONE, matrix must be square, not height = "
+               << height << ",  width = " << width);
+
+   for (int j = 0; j < width; j++)
+   {
+      (*this)(row, j) = 0.0;
+   }
+
+   if (dpolicy == DIAG_ONE)
+   {
+      (*this)(row, row) = 1.0;
+   }
+}
+
+void DenseMatrix::EliminateCol(int col, const double sol, Vector &rhs)
+{
+   MFEM_ASSERT(col < width && col >= 0,
+               "Col " << col << " not in matrix of width " << width);
+
+   for (int i = 0; i < height; i++)
+   {
+      rhs(i) -= sol * (*this)(i, col);
+      (*this)(i, col) = 0.0;
+   }
+}
+
+void DenseMatrix::EliminateCol(int col, DiagonalPolicy dpolicy)
+{
+   MFEM_ASSERT(col < width && col >= 0,
+               "Col " << col << " not in matrix of width " << width);
+   MFEM_ASSERT(dpolicy != DIAG_KEEP, "Diagonal policy must not be DIAG_KEEP");
+   MFEM_ASSERT(dpolicy != DIAG_ONE || height == width,
+               "if dpolicy == DIAG_ONE, matrix must be square, not height = "
+               << height << ",  width = " << width);
+
+   for (int i = 0; i < height; i++)
+   {
+      (*this)(i, col) = 0.0;
+   }
+
+   if (dpolicy == DIAG_ONE)
+   {
+      (*this)(col, col) = 1.0;
+   }
+}
+
+void DenseMatrix::EliminateRowCol(int rc, const double sol, Vector &rhs,
+                                  DiagonalPolicy dpolicy)
+{
+   MFEM_ASSERT(rc < height && rc >= 0,
+               "Row " << rc << " not in matrix of height " << height);
+
+   for (int i = 0; i < rc; i++)
+   {
+      rhs(i) -= sol * (*this)(i, rc);
+      (*this)(i, rc) = 0.;
+      (*this)(rc, i) = 0.;
+   }
+
+   switch (dpolicy)
+   {
+      case DIAG_KEEP:
+         rhs(rc) = (*this)(rc, rc) * sol;
+         break;
+      case DIAG_ONE:
+         (*this)(rc, rc) = 1.0;
+         rhs(rc) = sol;
+         break;
+      case DIAG_ZERO:
+         (*this)(rc, rc) = 0.;
+         rhs(rc) = 0.;
+         break;
+      default:
+         mfem_error("DenseMatrix::EliminateRowCol () #1");
+         break;
+   }
+
+   for (int i = rc+1; i < height; i++)
+   {
+      rhs(i) -= sol * (*this)(i, rc);
+      (*this)(i, rc) = 0.;
+   }
+   for (int j = rc+1; j < width; j++)
+   {
+      (*this)(rc, j) = 0.;
+   }
+}
+
+void DenseMatrix::EliminateRowCol(int rc, DiagonalPolicy dpolicy)
+{
+   MFEM_ASSERT(rc < height && rc >= 0,
+               "Row " << rc << " not in matrix of height " << height);
+
+   for (int i = 0; i < rc; i++)
+   {
+      (*this)(i, rc) = 0.;
+      (*this)(rc, i) = 0.;
+   }
+
+   switch (dpolicy)
+   {
+      case DIAG_KEEP:
+         break;
+      case DIAG_ONE:
+         (*this)(rc, rc) = 1.0;
+         break;
+      case DIAG_ZERO:
+         (*this)(rc, rc) = 0.;
+         break;
+      default:
+         mfem_error("DenseMatrix::EliminateRowCol () #1");
+         break;
+   }
+
+   for (int i = rc+1; i < height; i++)
+   {
+      (*this)(i, rc) = 0.;
+      (*this)(rc, i) = 0.;
+   }
+}
+
 void DenseMatrix::CopyRows(const DenseMatrix &A, int row1, int row2)
 {
    SetSize(row2 - row1 + 1, A.Width());
