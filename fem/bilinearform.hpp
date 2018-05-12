@@ -666,6 +666,9 @@ protected:
    Array<BilinearFormIntegrator*> boundary_integs;
    Array<Array<int>*> boundary_integs_marker; ///< Entries are not owned.
 
+   /// Interior face integrators.
+   Array<BilinearFormIntegrator*> interior_face_integs;
+
    /// Trace face (skeleton) integrators.
    Array<BilinearFormIntegrator*> trace_face_integs;
 
@@ -750,6 +753,9 @@ public:
    /// Adds a boundary integrator. Assumes ownership of @a bfi.
    void AddBoundaryIntegrator (BilinearFormIntegrator * bfi,
                                Array<int> &bdr_marker);
+
+   /// Adds a interior face integrator. Assumes ownership of @a bfi.
+   void AddInteriorFaceIntegrator(BilinearFormIntegrator *bfi);
 
    /** @brief Add a trace face integrator. Assumes ownership of @a bfi.
 
