@@ -57,6 +57,12 @@ public:
                                       ElementTransformation &Tr,
                                       const Vector &elfun, Vector &elvect);
 
+   /// Perform the local action (mixed) of the NonlinearFormIntegrator
+   virtual void AssembleElementVector2(const FiniteElement &trial_fe,
+                                       const FiniteElement &test_fe,
+                                       ElementTransformation &Tr,
+                                       const Vector &elfun, Vector &elvect);
+
    /// @brief Perform the local action of the NonlinearFormIntegrator resulting
    /// from a face integral term.
    virtual void AssembleFaceVector(const FiniteElement &el1,
