@@ -1535,6 +1535,25 @@ void DenseMatrix::EliminateRow(int row, DiagonalPolicy dpolicy)
    }
 }
 
+void DenseMatrix::EliminateRows(const Array<int> &rows, const Vector *x,
+                                Vector *b)
+{
+   for (int i = 0; i < height; i++)
+   {
+      if (rows[i])
+      {
+         for (int j = 0; j < width; j++)
+         {
+            if (x && b)
+            {
+               (*b)(j) -= (*this)(i, j) * (*x)(i);
+            }
+            (*this)(i, j) = 0.0;
+         }
+      }
+   }
+}
+
 void DenseMatrix::EliminateCol(int col, const double sol, Vector &rhs)
 {
    MFEM_ASSERT(col < width && col >= 0,
@@ -1564,6 +1583,25 @@ void DenseMatrix::EliminateCol(int col, DiagonalPolicy dpolicy)
    if (dpolicy == DIAG_ONE)
    {
       (*this)(col, col) = 1.0;
+   }
+}
+
+void DenseMatrix::EliminateCols(const Array<int> &cols, const Vector *x,
+                                Vector *b)
+{
+   for (int j = 0; j < width; j++)
+   {
+      if (cols[j])
+      {
+         for (int i = 0; i < height; i++)
+         {
+            if (x && b)
+            {
+               (*b)(i) -= (*this)(i, j) * (*x)(j);
+            }
+            (*this)(i, j) = 0.0;
+         }
+      }
    }
 }
 

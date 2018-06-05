@@ -329,12 +329,57 @@ public:
        outside.  */
    void GradToDiv(Vector &div);
 
+   /// Eliminates a column from the transpose matrix.
    void EliminateRow(int row, const double sol, Vector &rhs);
+
+   /// Eliminates a row from the matrix.
+   /*!
+    * - If @a dpolicy = #DIAG_ZERO, all the entries in the row will be set to 0.
+    * - If @a dpolicy = #DIAG_ONE (matrix must be square), the diagonal entry
+    *   will be set equal to 1 and all other entries in the row to 0.
+    * - The policy #DIAG_KEEP is not supported.
+    */
    void EliminateRow(int row, DiagonalPolicy dpolicy = DIAG_ZERO);
+
+   /// Eliminate all rows i for which @a rows[i] != 0.
+   /** Elimination of a row means that all entries in the row are set to
+       zero. In addition, if the pointers @a x and @a b are not NULL, the
+       eliminated matrix entries are multiplied by the corresponding solution
+       value in @a *x and subtracted from the r.h.s. vector, @a *b. */
+   void EliminateRows(const Array<int> &rows, const Vector *x = NULL,
+                      Vector *b = NULL);
+
+   /// Eliminates a row from the matrix.
    void EliminateCol(int col, const double sol, Vector &rhs);
+
+   /// Eliminates the column @a col from the matrix.
+   /** - If @a dpolicy = #DIAG_ZERO, all entries in the column will be set to 0.
+       - If @a dpolicy = #DIAG_ONE (matrix must be square), the diagonal entry
+         will be set equal to 1 and all other entries in the column to 0.
+       - The policy #DIAG_KEEP is not supported. */
    void EliminateCol(int col, DiagonalPolicy dpolicy = DIAG_ZERO);
+
+   /// Eliminate all columns i for which @a cols[i] != 0.
+   /** Elimination of a column means that all entries in the column are set to
+       zero. In addition, if the pointers @a x and @a b are not NULL, the
+       eliminated matrix entries are multiplied by the corresponding solution
+       value in @a *x and subtracted from the r.h.s. vector, @a *b. */
+   void EliminateCols(const Array<int> &cols, const Vector *x = NULL,
+                      Vector *b = NULL);
+
+   /// Eliminate row @a rc and column @a rc and modify the @a rhs using @a sol.
+   /** Eliminates the column @a rc to the @a rhs, deletes the row @a rc and
+       replaces the element (rc,rc) with 1.0; By default, elements (rc,rc)
+       are set to 1.0, although this behavior can be adjusted by changing
+       the @a dpolicy parameter. */
    void EliminateRowCol(int rc, const double sol, Vector &rhs,
                         DiagonalPolicy dpolicy = DIAG_ONE);
+
+   /// Eliminate row @a rc and column @a rc.
+   /** Eliminates the column @a rc, deletes the row @a rc and replaces
+       the element (rc,rc) with 1.0; By default, elements (rc,rc) are set
+       to 1.0, although this behavior can be adjusted by changing the @a
+       dpolicy parameter. */
    void EliminateRowCol(int rc, DiagonalPolicy dpolicy = DIAG_ONE);
 
    /// Copy rows row1 through row2 from A to *this
