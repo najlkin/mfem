@@ -665,7 +665,7 @@ void CGSolver::Mult(const Vector &b, Vector &x) const
    {
       converged = 1;
       final_iter = 0;
-      final_norm = sqrt(nom);
+      final_norm = sqrt(abs(nom));
       return;
    }
 
@@ -794,7 +794,7 @@ void CGSolver::Mult(const Vector &b, Vector &x) const
       mfem::out << "Average reduction factor = "
                 << pow (betanom/nom0, 0.5/final_iter) << '\n';
    }
-   final_norm = sqrt(betanom);
+   final_norm = sqrt(abs(betanom));
 
    Monitor(final_iter, final_norm, r, x, true);
 }
