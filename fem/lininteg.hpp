@@ -92,6 +92,27 @@ public:
                                          Vector &elvect) = 0;
 };
 
+/// Class for scaling the given integrator
+class ScaledLFIntergator : public LinearFormIntegrator
+{
+   LinearFormIntegrator *lfi;
+   double s;
+   int own_lfi;
+
+public:
+   ScaledLFIntergator(LinearFormIntegrator *_lfi = NULL, double _s = 1.0,
+                      int _own_lfi = 1):
+      LinearFormIntegrator(), lfi(_lfi), s(_s), own_lfi(_own_lfi) { }
+
+   void AssembleRHSElementVect(const FiniteElement &el,
+                               ElementTransformation &Tr,
+                               Vector &elvect);
+   void AssembleRHSElementVect(const FiniteElement &el,
+                               FaceElementTransformations &Tr,
+                               Vector &elvect);
+
+   ~ScaledLFIntergator() { if (own_lfi) { delete lfi; } }
+};
 
 /// Class for domain integration L(v) := (f, v)
 class DomainLFIntegrator : public DeltaLFIntegrator

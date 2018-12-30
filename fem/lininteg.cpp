@@ -29,6 +29,24 @@ void LinearFormIntegrator::AssembleRHSElementVect(
    mfem_error("LinearFormIntegrator::AssembleRHSElementVect(...)");
 }
 
+void ScaledLFIntergator::AssembleRHSElementVect(const FiniteElement &el,
+                                                ElementTransformation &Tr,
+                                                Vector &elvect)
+{
+   if (!lfi) { return; }
+   lfi->AssembleRHSElementVect(el, Tr, elvect);
+   if (s != 1.0) { elvect *= s; }
+}
+
+void ScaledLFIntergator::AssembleRHSElementVect(const FiniteElement &el,
+                                                FaceElementTransformations &Tr,
+                                                Vector &elvect)
+{
+   if (!lfi) { return; }
+   lfi->AssembleRHSElementVect(el, Tr, elvect);
+   if (s != 1.0) { elvect *= s; }
+}
+
 void DomainLFIntegrator::AssembleRHSElementVect(const FiniteElement &el,
                                                 ElementTransformation &Tr,
                                                 Vector &elvect)
