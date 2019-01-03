@@ -439,6 +439,23 @@ SumIntegrator::~SumIntegrator()
    }
 }
 
+void ScaledIntegrator::AssembleElementMatrix(
+   const FiniteElement &el, ElementTransformation &Tr, DenseMatrix &elmat)
+{
+   if (!bfi) { return; }
+   bfi->AssembleElementMatrix(el, Tr, elmat);
+   if (s != 1.0) { elmat *= s; }
+}
+
+void ScaledIntegrator::AssembleElementMatrix2(
+   const FiniteElement &trial_fe, const FiniteElement &test_fe,
+   ElementTransformation &Tr, DenseMatrix &elmat)
+{
+   if (!bfi) { return; }
+   bfi->AssembleElementMatrix2(trial_fe, test_fe, Tr, elmat);
+   if (s != 1.0) { elmat *= s; }
+}
+
 void MixedScalarIntegrator::AssembleElementMatrix2(
    const FiniteElement &trial_fe, const FiniteElement &test_fe,
    ElementTransformation &Trans, DenseMatrix &elmat)

@@ -445,6 +445,29 @@ public:
    virtual ~SumIntegrator();
 };
 
+/// Integrator scaling the given Integrator by a constant
+class ScaledIntegrator : public BilinearFormIntegrator
+{
+private:
+   BilinearFormIntegrator* bfi;
+   double s;
+   int own_bfi;
+
+public:
+   ScaledIntegrator(BilinearFormIntegrator *_bfi = NULL, double _s = 1.0,
+                    int _own_bfi = 1) : bfi(_bfi), s(_s), own_bfi(_own_bfi) { }
+
+   virtual void AssembleElementMatrix(const FiniteElement &el,
+                                      ElementTransformation &Trans,
+                                      DenseMatrix &elmat);
+   virtual void AssembleElementMatrix2(const FiniteElement &trial_fe,
+                                       const FiniteElement &test_fe,
+                                       ElementTransformation &Trans,
+                                       DenseMatrix &elmat);
+
+   virtual ~ScaledIntegrator() { if (own_bfi) { delete bfi; } }
+};
+
 /** An abstract class for integrating the product of two scalar basis functions
     with an optional scalar coefficient. */
 class MixedScalarIntegrator: public BilinearFormIntegrator
