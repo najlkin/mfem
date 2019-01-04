@@ -196,13 +196,13 @@ void VectorGridFunctionCoefficient::Eval(
 }
 
 VectorGridFunctionBdrCoefficient::VectorGridFunctionBdrCoefficient (
-   GridFunction *gf)
+   const GridFunction *gf)
    : VectorCoefficient ((gf) ? gf -> VectorDim() : 0)
 {
    GridFunc = gf;
 }
 
-void VectorGridFunctionBdrCoefficient::SetGridFunction(GridFunction *gf)
+void VectorGridFunctionBdrCoefficient::SetGridFunction(const GridFunction *gf)
 {
    GridFunc = gf; vdim = (gf) ? gf -> VectorDim() : 0;
 }
@@ -220,13 +220,14 @@ void VectorGridFunctionBdrCoefficient::Eval(
 }
 
 VectorGridFunctionBdrTraceCoefficient::VectorGridFunctionBdrTraceCoefficient (
-   GridFunction *gf)
+   const GridFunction *gf)
    : VectorCoefficient ((gf) ? gf -> VectorDim() : 0)
 {
    GridFunc = gf;
 }
 
-void VectorGridFunctionBdrTraceCoefficient::SetGridFunction(GridFunction *gf)
+void VectorGridFunctionBdrTraceCoefficient::SetGridFunction(
+   const GridFunction *gf)
 {
    GridFunc = gf; vdim = (gf) ? gf -> VectorDim() : 0;
 }

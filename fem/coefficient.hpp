@@ -199,17 +199,17 @@ public:
 class GridFunctionBdrCoefficient : public Coefficient
 {
 private:
-   GridFunction *GridF;
+   const GridFunction *GridF;
    int Component;
 
 public:
    /** Construct GridFunctionBdrCoefficient from a given GridFunction, and
        optionally specify a component to use if it is a vector GridFunction. */
-   GridFunctionBdrCoefficient (GridFunction *gf, int comp = 1)
+   GridFunctionBdrCoefficient (const GridFunction *gf, int comp = 1)
    { GridF = gf; Component = comp; }
 
-   void SetGridFunction(GridFunction *gf) { GridF = gf; }
-   GridFunction * GetGridFunction() const { return GridF; }
+   void SetGridFunction(const GridFunction *gf) { GridF = gf; }
+   const GridFunction * GetGridFunction() const { return GridF; }
 
    virtual double Eval(ElementTransformation &T,
                        const IntegrationPoint &ip);
@@ -222,17 +222,17 @@ public:
 class GridFunctionBdrTraceCoefficient : public Coefficient
 {
 private:
-   GridFunction *GridF;
+   const GridFunction *GridF;
    int Component;
 
 public:
    /** Construct GridFunctionBdrTraceCoefficient from a given GridFunction, and
        optionally specify a component to use if it is a vector GridFunction. */
-   GridFunctionBdrTraceCoefficient (GridFunction *gf, int comp = 1)
+   GridFunctionBdrTraceCoefficient (const GridFunction *gf, int comp = 1)
    { GridF = gf; Component = comp; }
 
-   void SetGridFunction(GridFunction *gf) { GridF = gf; }
-   GridFunction * GetGridFunction() const { return GridF; }
+   void SetGridFunction(const GridFunction *gf) { GridF = gf; }
+   const GridFunction * GetGridFunction() const { return GridF; }
 
    virtual double Eval(ElementTransformation &T,
                        const IntegrationPoint &ip);
@@ -561,14 +561,14 @@ public:
 class VectorGridFunctionBdrCoefficient : public VectorCoefficient
 {
 protected:
-   GridFunction *GridFunc;
+   const GridFunction *GridFunc;
 
 public:
    VectorGridFunctionBdrCoefficient() : VectorCoefficient(0), GridFunc(NULL) { }
-   VectorGridFunctionBdrCoefficient(GridFunction *gf);
+   VectorGridFunctionBdrCoefficient(const GridFunction *gf);
 
-   void SetGridFunction(GridFunction *gf);
-   GridFunction * GetGridFunction() const { return GridFunc; }
+   void SetGridFunction(const GridFunction *gf);
+   const GridFunction * GetGridFunction() const { return GridFunc; }
 
    virtual void Eval(Vector &V, ElementTransformation &T,
                      const IntegrationPoint &ip);
@@ -586,14 +586,14 @@ public:
 class VectorGridFunctionBdrTraceCoefficient : public VectorCoefficient
 {
 protected:
-   GridFunction *GridFunc;
+   const GridFunction *GridFunc;
 
 public:
    VectorGridFunctionBdrTraceCoefficient() : VectorCoefficient(0), GridFunc(NULL) { }
-   VectorGridFunctionBdrTraceCoefficient(GridFunction *gf);
+   VectorGridFunctionBdrTraceCoefficient(const GridFunction *gf);
 
-   void SetGridFunction(GridFunction *gf);
-   GridFunction * GetGridFunction() const { return GridFunc; }
+   void SetGridFunction(const GridFunction *gf);
+   const GridFunction * GetGridFunction() const { return GridFunc; }
 
    virtual void Eval(Vector &V, ElementTransformation &T,
                      const IntegrationPoint &ip);
