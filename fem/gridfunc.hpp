@@ -167,6 +167,16 @@ public:
                                Vector &val) const;
    ///@}
 
+   double GetBdrValue(int i, const IntegrationPoint &ir, int vdim = 1) const;
+
+   void GetBdrVectorValue(int i, const IntegrationPoint &ir, Vector &val) const;
+
+   double GetFaceValue(int i, int side, const IntegrationPoint &ip,
+                       int vdim = 1, int *pdir = NULL) const;
+
+   void GetFaceVectorValue(int i, int side, const IntegrationPoint &ip,
+                           Vector &val, int *pdir = NULL) const;
+
    /** @name Element Index Get Values Methods
 
        These are convenience methods for repeatedly calling GetValue for
@@ -192,8 +202,26 @@ public:
    void GetValues(int i, const IntegrationRule &ir, Vector &vals,
                   DenseMatrix &tr, int vdim = 1) const;
 
+   void GetBdrValues(int i, const IntegrationRule &ir, Vector &vals,
+                     int vdim = 1) const;
+
+   void GetBdrValues(int i, const IntegrationRule &ir, Vector &vals,
+                     DenseMatrix &tr, int vdim = 1) const;
+
+   int GetFaceValues(int i, int side, const IntegrationRule &ir, Vector &vals,
+                     int vdim = 1) const;
+
    void GetVectorValues(int i, const IntegrationRule &ir,
                         DenseMatrix &vals, DenseMatrix &tr) const;
+
+   void GetBdrVectorValues(ElementTransformation &T, const IntegrationRule &ir,
+                           DenseMatrix &vals) const;
+
+   void GetBdrVectorValues(int i, const IntegrationRule &ir,
+                           DenseMatrix &vals, DenseMatrix &tr) const;
+
+   int GetFaceVectorValues(int i, int side, const IntegrationRule &ir,
+                           DenseMatrix &vals) const;
    ///@}
 
    /** @name ElementTransformation Get Value Methods
