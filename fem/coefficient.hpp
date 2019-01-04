@@ -215,6 +215,28 @@ public:
                        const IntegrationPoint &ip);
 };
 
+/// Coefficient defined by the boundary traces of a GridFunction. This coefficient is mesh dependent.
+/** The coefficient is defined on the boundary elements, but the values are
+    taken from the corresponding boundary faces of the given GridFunction.
+*/
+class GridFunctionBdrTraceCoefficient : public Coefficient
+{
+private:
+   GridFunction *GridF;
+   int Component;
+
+public:
+   /** Construct GridFunctionBdrTraceCoefficient from a given GridFunction, and
+       optionally specify a component to use if it is a vector GridFunction. */
+   GridFunctionBdrTraceCoefficient (GridFunction *gf, int comp = 1)
+   { GridF = gf; Component = comp; }
+
+   void SetGridFunction(GridFunction *gf) { GridF = gf; }
+   GridFunction * GetGridFunction() const { return GridF; }
+
+   virtual double Eval(ElementTransformation &T,
+                       const IntegrationPoint &ip);
+};
 
 /** @brief A coefficient that depends on 1 or 2 parent coefficients and a
     transformation rule represented by a C-function.
@@ -555,6 +577,31 @@ public:
                      const IntegrationRule &ir);
 
    virtual ~VectorGridFunctionBdrCoefficient() { }
+};
+
+/// Vector coefficient defined by the boundary traces of a vector GridFunction
+/** The coefficient is defined on the boundary elements, but the values are
+    taken from the corresponding boundary faces of the given GridFunction.
+*/
+class VectorGridFunctionBdrTraceCoefficient : public VectorCoefficient
+{
+protected:
+   GridFunction *GridFunc;
+
+public:
+   VectorGridFunctionBdrTraceCoefficient() : VectorCoefficient(0), GridFunc(NULL) { }
+   VectorGridFunctionBdrTraceCoefficient(GridFunction *gf);
+
+   void SetGridFunction(GridFunction *gf);
+   GridFunction * GetGridFunction() const { return GridFunc; }
+
+   virtual void Eval(Vector &V, ElementTransformation &T,
+                     const IntegrationPoint &ip);
+
+   virtual void Eval(DenseMatrix &M, ElementTransformation &T,
+                     const IntegrationRule &ir);
+
+   virtual ~VectorGridFunctionBdrTraceCoefficient() { }
 };
 
 /// Vector coefficient defined as the Gradient of a scalar GridFunction

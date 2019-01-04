@@ -177,6 +177,12 @@ public:
    void GetFaceVectorValue(int i, int side, const IntegrationPoint &ip,
                            Vector &val, int *pdir = NULL) const;
 
+   double GetBdrFaceValue(int iBdrEl, const IntegrationPoint &ip,
+                          int vdim = 1) const;
+
+   void GetBdrFaceVectorValue(int iBdrEl, const IntegrationPoint &ip,
+                              Vector &val) const;
+
    /** @name Element Index Get Values Methods
 
        These are convenience methods for repeatedly calling GetValue for
@@ -210,6 +216,12 @@ public:
 
    int GetFaceValues(int i, int side, const IntegrationRule &ir, Vector &vals,
                      int vdim = 1) const;
+
+   void GetBdrFaceValues(int iBdrEl, const IntegrationRule &ir,
+                         Vector &vals, int vdim = 1) const;
+
+   void GetBdrFaceValues(int iBdrEl, const IntegrationRule &ir,
+                         Vector &vals, DenseMatrix &tr, int vdim = 1) const;
 
    void GetVectorValues(int i, const IntegrationRule &ir,
                         DenseMatrix &vals, DenseMatrix &tr) const;
@@ -313,6 +325,12 @@ public:
 
    void GetHessians(int i, const IntegrationRule &ir, DenseMatrix &hess,
                     DenseMatrix &tr, int vdim = 1) const;
+
+   void GetBdrFaceVectorValues(int iBdrEl, const IntegrationRule &ir,
+                               DenseMatrix &vals) const;
+
+   void GetBdrFaceVectorValues(int iBdrEl, const IntegrationRule &ir,
+                               DenseMatrix &vals, DenseMatrix &tr) const;
 
    void GetValuesFrom(const GridFunction &orig_func);
 
