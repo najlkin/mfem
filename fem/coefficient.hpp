@@ -731,7 +731,10 @@ public:
    DeltaCoefficient& GetDeltaCoefficient() { return d; }
 
    void SetScale(double s) { d.SetScale(s); }
+   void SetTol(double tol) { d.SetTol(tol); }
+
    void SetDirection(const Vector& d_);
+   void GetDirection(Vector &d_) { d_ = dir; }
 
    void SetDeltaCenter(const Vector& center) { d.SetDeltaCenter(center); }
    void GetDeltaCenter(Vector& center) { d.GetDeltaCenter(center); }
