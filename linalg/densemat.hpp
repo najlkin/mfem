@@ -769,6 +769,16 @@ public:
    /// Sets the tensor elements equal to constant c
    DenseTensor &operator=(double c);
 
+   DenseTensor &operator+=(const double *m);
+   DenseTensor &operator+=(const DenseTensor &m);
+
+   DenseTensor &operator-=(const DenseTensor &m);
+
+   DenseTensor &operator*=(double c);
+
+   /// (*this) = -(*this)
+   void Neg();
+
    DenseMatrix &operator()(int k) { Mk.data = GetData(k); return Mk; }
    const DenseMatrix &operator()(int k) const
    { return const_cast<DenseTensor&>(*this)(k); }
