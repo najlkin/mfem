@@ -77,6 +77,9 @@ public:
        should not be used with DenseMatrix that owns its current data array. */
    void ClearExternalData() { data = NULL; height = width = 0; capacity = 0; }
 
+   /// Set the owenership of the data
+   void MakeDataOwner() { if (capacity < 0) capacity *= -1; }
+
    /// Delete the matrix data array (if owned) and reset the matrix state.
    void Clear()
    { if (OwnsData()) { delete [] data; } ClearExternalData(); }
