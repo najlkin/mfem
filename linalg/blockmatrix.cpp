@@ -261,7 +261,7 @@ void BlockMatrix::EliminateRowCol(int rc, BlockMatrix &Ae,
                "BlockMatrix::EliminateRowCol: Null diagonal block");
 
    MFEM_ASSERT(row_offsets == Ae.RowOffsets() && col_offsets == Ae.ColOffsets(),
-               "BlockMatrix::EliminateRowCol: Eliminated row/col matrix size does not match");
+               "BlockMatrix::EliminateRowCol: Eliminated row/col matrix structures do not match");
 
    MFEM_ASSERT(Ae.IsZeroBlock(iiblock, iiblock) == 0,
                "BlockMatrix::EliminateRowCol: Null diagonal block of the eliminated row/col matrix");
@@ -348,6 +348,83 @@ void BlockMatrix::EliminateRowCol(Array<int> & ess_bc_dofs, Vector & sol,
             block_rhs.SetDataAndSize(rhs.GetData()+row_offsets[jjblock],
                                      row_offsets[jjblock+1] - row_offsets[jjblock]);
             Aij(jjblock, iiblock)->EliminateCols(block_dofs, &block_sol, &block_rhs);
+         }
+      }
+   }
+}
+
+void BlockMatrix::EliminateRowCol(Array<int> & ess_bc_dofs, BlockMatrix &Ae,
+                                  DiagonalPolicy dpolicy)
+{
+   if (nRowBlocks != nColBlocks)
+   {
+      mfem_error("BlockMatrix::EliminateRowCol: nRowBlocks != nColBlocks");
+   }
+
+   for (int iiblock = 0; iiblock < nRowBlocks; ++iiblock)
+   {
+      if (row_offsets[iiblock] != col_offsets[iiblock])
+      {
+         mfem::out << "BlockMatrix::EliminateRowCol: row_offests["
+                   << iiblock << "] != col_offsets["<<iiblock<<"]\n";
+         mfem_error();
+      }
+   }
+
+   MFEM_ASSERT(row_offsets == Ae.RowOffsets() && col_offsets == Ae.ColOffsets(),
+               "BlockMatrix::EliminateRowCol: Eliminated row/col matrix structures do not match");
+
+   // We also have to do the same for each Aij
+   Array<int> block_dofs;
+
+   for (int iiblock = 0; iiblock < nRowBlocks; ++iiblock)
+   {
+      int dsize = row_offsets[iiblock+1] - row_offsets[iiblock];
+      block_dofs.MakeRef(ess_bc_dofs.GetData()+row_offsets[iiblock], dsize);
+
+      if (Aij(iiblock, iiblock))
+      {
+         for (int i = 0; i < block_dofs.Size(); ++i)
+         {
+            if (block_dofs[i])
+            {
+               Aij(iiblock, iiblock)->EliminateRowCol(i, Ae.GetBlock(iiblock, iiblock),
+                                                      dpolicy);
+            }
+         }
+      }
+      else
+      {
+         for (int i = 0; i < block_dofs.Size(); ++i)
+         {
+            if (block_dofs[i])
+            {
+               mfem_error("BlockMatrix::EliminateRowCol: Null diagonal block \n");
+            }
+         }
+      }
+
+      for (int jjblock = 0; jjblock < nRowBlocks; ++jjblock)
+      {
+         if (jjblock != iiblock && Aij(iiblock, jjblock))
+         {
+            for (int i = 0; i < block_dofs.Size(); ++i)
+            {
+               if (block_dofs[i])
+               {
+                  Aij(iiblock, jjblock)->EliminateRow(i, Ae.GetBlock(iiblock, jjblock));
+               }
+            }
+         }
+         if (jjblock != iiblock && Aij(jjblock, iiblock))
+         {
+            for (int i = 0; i < block_dofs.Size(); ++i)
+            {
+               if (block_dofs[i])
+               {
+                  Aij(jjblock, iiblock)->EliminateCol(i, Ae.GetBlock(jjblock, iiblock));
+               }
+            }
          }
       }
    }
