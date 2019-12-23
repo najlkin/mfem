@@ -1131,6 +1131,7 @@ MixedBilinearForm::MixedBilinearForm (FiniteElementSpace *tr_fes,
    mat = NULL;
    mat_e = NULL;
    extern_bfs = 0;
+   element_matrices = NULL;
    assembly = AssemblyLevel::LEGACY;
    ext = NULL;
 }
@@ -1145,6 +1146,7 @@ MixedBilinearForm::MixedBilinearForm (FiniteElementSpace *tr_fes,
    mat = NULL;
    mat_e = NULL;
    extern_bfs = 1;
+   element_matrices = NULL;
    ext = NULL;
 
    // Copy the pointers to the integrators
@@ -1353,13 +1355,21 @@ void MixedBilinearForm::Assemble (int skip_zeros)
       {
          trial_fes -> GetElementVDofs (i, tr_vdofs);
          test_fes  -> GetElementVDofs (i, te_vdofs);
-         eltrans = test_fes -> GetElementTransformation (i);
-         for (int k = 0; k < domain_integs.Size(); k++)
+
+         if (element_matrices)
          {
-            domain_integs[k] -> AssembleElementMatrix2 (*trial_fes -> GetFE(i),
-                                                        *test_fes  -> GetFE(i),
-                                                        *eltrans, elemmat);
-            mat -> AddSubMatrix (te_vdofs, tr_vdofs, elemmat, skip_zeros);
+            mat -> AddSubMatrix(te_vdofs, tr_vdofs, (*element_matrices)(i), skip_zeros);
+         }
+         else
+         {
+            eltrans = test_fes -> GetElementTransformation (i);
+            for (int k = 0; k < domain_integs.Size(); k++)
+            {
+               domain_integs[k] -> AssembleElementMatrix2 (*trial_fes -> GetFE(i),
+                                                           *test_fes  -> GetFE(i),
+                                                           *eltrans, elemmat);
+               mat -> AddSubMatrix (te_vdofs, tr_vdofs, elemmat, skip_zeros);
+            }
          }
       }
    }
@@ -1686,9 +1696,60 @@ void MixedBilinearForm::ConformingAssemble()
    width = mat->Width();
 }
 
+void MixedBilinearForm::ComputeElementMatrices()
+{
+   if (element_matrices || domain_integs.Size() == 0 || test_fes->GetNE() == 0)
+   {
+      return;
+   }
+
+   int num_elements = test_fes->GetNE();
+   int nvdofs_tr = trial_fes->GetFE(0)->GetDof() * trial_fes->GetVDim();
+   int nvdofs_te = test_fes->GetFE(0)->GetDof() * test_fes->GetVDim();
+
+   element_matrices = new DenseTensor(nvdofs_te, nvdofs_tr,
+                                      num_elements);
+
+   DenseMatrix tmp;
+   IsoparametricTransformation eltrans;
+
+#ifdef MFEM_USE_LEGACY_OPENMP
+   #pragma omp parallel for private(tmp,eltrans)
+#endif
+   for (int i = 0; i < num_elements; i++)
+   {
+      DenseMatrix elmat(element_matrices->GetData(i),
+                        nvdofs_te, nvdofs_tr);
+      const FiniteElement &trial_fe = *trial_fes->GetFE(i);
+      const FiniteElement &test_fe = *test_fes->GetFE(i);
+#ifdef MFEM_DEBUG
+      if (nvdofs_tr != trial_fe.GetDof() * trial_fes->GetVDim()
+          || nvdofs_te != test_fe.GetDof() * test_fes->GetVDim())
+         mfem_error("BilinearForm::ComputeElementMatrices:"
+                    " all elements must have same number of dofs");
+#endif
+      test_fes->GetElementTransformation(i, &eltrans);
+
+      domain_integs[0]->AssembleElementMatrix2(trial_fe, test_fe, eltrans, elmat);
+      for (int k = 1; k < domain_integs.Size(); k++)
+      {
+         // note: some integrators may not be thread-safe
+         domain_integs[k]->AssembleElementMatrix2(trial_fe, test_fe, eltrans, tmp);
+         elmat += tmp;
+      }
+      elmat.ClearExternalData();
+   }
+}
 
 void MixedBilinearForm::ComputeElementMatrix(int i, DenseMatrix &elmat)
 {
+   if (element_matrices)
+   {
+      elmat.SetSize(element_matrices->SizeI(), element_matrices->SizeJ());
+      elmat = element_matrices->GetData(i);
+      return;
+   }
+
    if (domain_integs.Size())
    {
       const FiniteElement &trial_fe = *trial_fes->GetFE(i);
@@ -1909,6 +1970,7 @@ void MixedBilinearForm::Update()
 MixedBilinearForm::~MixedBilinearForm()
 {
    if (mat) { delete mat; }
+   if (element_matrices) { delete element_matrices; }
    if (mat_e) { delete mat_e; }
    if (!extern_bfs)
    {
