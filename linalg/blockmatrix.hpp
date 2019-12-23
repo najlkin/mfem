@@ -139,6 +139,12 @@ public:
                                  const double val = 1.) const;
    ///@}
 
+   /// partial Matrix-Vector Multiplication y = A*x
+   void PartMult(const Array<int> &rows, const Vector &x, Vector &y) const;
+   /// partial Matrix-Vector Multiplication y = y + a*A*x
+   void PartAddMult(const Array<int> &rows, const Vector &x, Vector &y,
+                    const double a=1.0) const;
+
    //! Destructor
    virtual ~BlockMatrix();
    //! If owns_blocks the SparseMatrix objects Aij will be deallocated.

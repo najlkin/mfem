@@ -504,6 +504,76 @@ void BlockMatrix::AddMultTranspose(const Vector & x, Vector & y,
    }
 }
 
+void BlockMatrix::PartMult(const Array<int> &rows, const Vector &x,
+                           Vector &y) const
+{
+   for (int i = 0; i < rows.Size(); i++)
+   {
+      y[rows[i]] = 0.;
+   }
+
+   PartAddMult(rows, x, y, 1.0);
+}
+
+void BlockMatrix::PartAddMult(const Array<int> &rows, const Vector &x,
+                              Vector &y, const double a) const
+{
+   Array<int> rows_block;
+   rows_block.Reserve(rows.Size());
+
+   Vector x_block, y_block;
+
+   int iblock = 0;
+
+   for (int i = 0; i < rows.Size(); i++)
+   {
+      int iloc = rows[i] - row_offsets[iblock];
+      if (iloc < 0 || iloc >= (row_offsets[iblock+1] - row_offsets[iblock]))
+      {
+         if (rows_block.Size() > 0)
+         {
+            y_block.SetDataAndSize(
+               y.GetData() + row_offsets[iblock],
+               row_offsets[iblock+1] - row_offsets[iblock]);
+
+            for (int jblock = 0; jblock < nColBlocks; jblock++)
+            {
+               if (!IsZeroBlock(iblock, jblock))
+               {
+                  x_block.SetDataAndSize(
+                     x.GetData() + col_offsets[jblock],
+                     col_offsets[jblock+1] - col_offsets[jblock]);
+
+                  Aij(iblock, jblock)->PartAddMult(rows_block, x_block, y_block, a);
+               }
+            }
+         }
+         rows_block.DeleteAll();
+         findGlobalRow(rows[i], iblock, iloc);
+      }
+      rows_block.Append(iloc);
+   }
+
+   if (rows_block.Size() > 0)
+   {
+      y_block.SetDataAndSize(
+         y.GetData() + row_offsets[iblock],
+         row_offsets[iblock+1] - row_offsets[iblock]);
+
+      for (int jblock = 0; jblock < nColBlocks; jblock++)
+      {
+         if (!IsZeroBlock(iblock, jblock))
+         {
+            x_block.SetDataAndSize(
+               x.GetData() + col_offsets[jblock],
+               col_offsets[jblock+1] - col_offsets[jblock]);
+
+            Aij(iblock, jblock)->PartAddMult(rows_block, x_block, y_block, a);
+         }
+      }
+   }
+}
+
 SparseMatrix * BlockMatrix::CreateMonolithic() const
 {
    int nnz = NumNonZeroElems();
