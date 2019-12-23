@@ -223,7 +223,7 @@ MatrixInverse * BilinearForm::Inverse() const
 
 void BilinearForm::Finalize (int skip_zeros)
 {
-   if (!static_cond) { mat->Finalize(skip_zeros); }
+   if (!static_cond && mat) { mat->Finalize(skip_zeros); }
    if (mat_e) { mat_e->Finalize(skip_zeros); }
    if (static_cond) { static_cond->Finalize(); }
    if (hybridization) { hybridization->Finalize(); }
