@@ -35,6 +35,150 @@ const Operator *BilinearFormExtension::GetRestriction() const
 }
 
 
+// Data and methods for element-assembled bilinear forms
+EABilinearFormExtension::EABilinearFormExtension(BilinearForm *form)
+   : BilinearFormExtension(form),
+     fes(a->FESpace())
+{
+   elem_restrict_lex = fes->GetElementRestriction(
+                          ElementDofOrdering::NATIVE);
+   if (elem_restrict_lex)
+   {
+      localX.SetSize(elem_restrict_lex->Height(), Device::GetMemoryType());
+      localY.SetSize(elem_restrict_lex->Height(), Device::GetMemoryType());
+      localY.UseDevice(true); // ensure 'localY = 0.0' is done on device
+   }
+}
+
+void EABilinearFormExtension::Assemble()
+{
+   a->ComputeElementMatrices();
+}
+
+void EABilinearFormExtension::Update()
+{
+   fes = a->FESpace();
+   height = width = fes->GetVSize();
+   elem_restrict_lex = fes->GetElementRestriction(
+                          ElementDofOrdering::NATIVE);
+   if (elem_restrict_lex)
+   {
+      localX.SetSize(elem_restrict_lex->Height());
+      localY.SetSize(elem_restrict_lex->Height());
+   }
+}
+
+void EABilinearFormExtension::FormSystemMatrix(const Array<int> &ess_tdof_list,
+                                               OperatorHandle &A)
+{
+   const Operator* P = fes->GetProlongationMatrix();
+   Operator *rap = this;
+   if (P) { rap = new RAPOperator(*P, *this, *P); }
+   const bool own_A = (rap!=this);
+   A.Reset(new ConstrainedOperator(rap, ess_tdof_list, own_A));
+}
+
+void EABilinearFormExtension::FormLinearSystem(const Array<int> &ess_tdof_list,
+                                               Vector &x, Vector &b,
+                                               OperatorHandle &A,
+                                               Vector &X, Vector &B,
+                                               int copy_interior)
+{
+   Operator *oper;
+   Operator::FormLinearSystem(ess_tdof_list, x, b, oper, X, B, copy_interior);
+   A.Reset(oper); // A will own oper
+}
+
+void EABilinearFormExtension::Mult(const Vector &x, Vector &y) const
+{
+   const int NE = fes->GetNE();
+   DenseTensor tensorX, tensorY;
+   const int ndofs_el = fes->GetFE(0)->GetDof();
+   const int vdim = fes->GetVDim();
+
+   if (elem_restrict_lex)
+   {
+      MFEM_ASSERT(elem_restrict_lex->Height() == ndofs_el * vdim * NE,
+                  "E-vector size is not NDOFS x VDIM x NE");
+      tensorX.UseExternalData(localX.GetData(), ndofs_el, vdim, NE);
+      tensorY.UseExternalData(localY.GetData(), ndofs_el, vdim, NE);
+
+      elem_restrict_lex->Mult(x, localX);
+   }
+   else
+   {
+      MFEM_ASSERT(x.Size() == ndofs_el * vdim * NE,
+                  "E-vector size is not NDOFS x VDIM x NE");
+      tensorX.UseExternalData(x.GetData(), ndofs_el, vdim, NE);
+      tensorY.UseExternalData(y.GetData(), ndofs_el, vdim, NE);
+   }
+
+   DenseMatrix elmat;
+   Vector locX, locY;
+
+   for (int i = 0; i < NE; i++)
+   {
+      a->ComputeElementMatrix(i, elmat);
+
+      for (int d = 0; d < fes->GetVDim(); d++)
+      {
+         tensorX(i).GetColumnReference(d, locX);
+         tensorY(i).GetColumnReference(d, locY);
+         elmat.Mult(locX, locY);
+      }
+   }
+
+   if (elem_restrict_lex)
+   {
+      elem_restrict_lex->MultTranspose(localY, y);
+   }
+}
+
+void EABilinearFormExtension::MultTranspose(const Vector &x, Vector &y) const
+{
+   const int NE = fes->GetNE();
+   DenseTensor tensorX, tensorY;
+   const int ndofs_el = fes->GetFE(0)->GetDof();
+   const int vdim = fes->GetVDim();
+
+   if (elem_restrict_lex)
+   {
+      MFEM_ASSERT(elem_restrict_lex->Height() == ndofs_el * vdim * NE,
+                  "E-vector size is not NDOFS x VDIM x NE");
+      tensorX.UseExternalData(localX.GetData(), ndofs_el, vdim, NE);
+      tensorY.UseExternalData(localY.GetData(), ndofs_el, vdim, NE);
+
+      elem_restrict_lex->Mult(x, localX);
+   }
+   else
+   {
+      MFEM_ASSERT(x.Size() == ndofs_el * vdim * NE,
+                  "E-vector size is not NDOFS x VDIM x NE");
+      tensorX.UseExternalData(x.GetData(), ndofs_el, vdim, NE);
+      tensorY.UseExternalData(y.GetData(), ndofs_el, vdim, NE);
+   }
+
+   DenseMatrix elmat;
+   Vector locX, locY;
+
+   for (int i = 0; i < NE; i++)
+   {
+      a->ComputeElementMatrix(i, elmat);
+
+      for (int d = 0; d < fes->GetVDim(); d++)
+      {
+         tensorX(i).GetColumnReference(d, locX);
+         tensorY(i).GetColumnReference(d, locY);
+         elmat.MultTranspose(locX, locY);
+      }
+   }
+
+   if (elem_restrict_lex)
+   {
+      elem_restrict_lex->MultTranspose(localY, y);
+   }
+}
+
 // Data and methods for partially-assembled bilinear forms
 PABilinearFormExtension::PABilinearFormExtension(BilinearForm *form)
    : BilinearFormExtension(form),
