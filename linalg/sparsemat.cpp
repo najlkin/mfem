@@ -1621,6 +1621,7 @@ void SparseMatrix::EliminateCol(int col, DiagonalPolicy dpolicy)
             if (aux->Column == col)
             {
                aux->Value = 0.0;
+               break;
             }
          }
       }
