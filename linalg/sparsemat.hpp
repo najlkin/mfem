@@ -386,12 +386,24 @@ public:
     */
    void EliminateRow(int row, DiagonalPolicy dpolicy = DIAG_ZERO);
 
+   /** @brief Similar to EliminateRow(int, DiagonalPolicy) + save the
+       eliminated entries into @a Ae so that (*this) + Ae is equal to the
+       original matrix */
+   void EliminateRow(int row, SparseMatrix &Ae,
+                     DiagonalPolicy dpolicy = DIAG_ZERO);
+
    /// Eliminates the column @a col from the matrix.
    /** - If @a dpolicy = #DIAG_ZERO, all entries in the column will be set to 0.
        - If @a dpolicy = #DIAG_ONE (matrix must be square), the diagonal entry
          will be set equal to 1 and all other entries in the column to 0.
        - The policy #DIAG_KEEP is not supported. */
    void EliminateCol(int col, DiagonalPolicy dpolicy = DIAG_ZERO);
+
+   /** @brief Similar to EliminateCol(int, DiagonalPolicy) + save the
+       eliminated entries into @a Ae so that (*this) + Ae is equal to the
+       original matrix */
+   void EliminateCol(int col, SparseMatrix &Ae,
+                     DiagonalPolicy dpolicy = DIAG_ZERO);
 
    /// Eliminate all columns i for which @a cols[i] != 0.
    /** Elimination of a column means that all entries in the column are set to

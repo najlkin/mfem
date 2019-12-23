@@ -215,13 +215,7 @@ void BlockMatrix::EliminateRowCol(int rc, DiagonalPolicy dpolicy)
 {
    // Find the block to which the dof belongs and its local number
    int idx, iiblock;
-   for (iiblock = 0; iiblock < nRowBlocks; ++iiblock)
-   {
-      idx = rc - row_offsets[iiblock];
-      if (idx < 0 ) { break; }
-   }
-   iiblock--;
-   idx = rc - row_offsets[iiblock];
+   findGlobalRow(rc, iiblock, idx);
 
    // Asserts
    MFEM_ASSERT(nRowBlocks == nColBlocks,
@@ -246,6 +240,45 @@ void BlockMatrix::EliminateRowCol(int rc, DiagonalPolicy dpolicy)
       if (Aij(jjblock,iiblock)) { Aij(jjblock,iiblock)->EliminateCol(idx); }
    }
    Aij(iiblock, iiblock)->EliminateRowCol(idx,dpolicy);
+}
+
+void BlockMatrix::EliminateRowCol(int rc, BlockMatrix &Ae,
+                                  DiagonalPolicy dpolicy)
+{
+   // Find the block to which the dof belongs and its local number
+   int idx, iiblock;
+   findGlobalRow(rc, iiblock, idx);
+
+   // Asserts
+   MFEM_ASSERT(nRowBlocks == nColBlocks,
+               "BlockMatrix::EliminateRowCol: nRowBlocks != nColBlocks");
+
+   MFEM_ASSERT(row_offsets[iiblock] == col_offsets[iiblock],
+               "BlockMatrix::EliminateRowCol: row_offests["
+               << iiblock << "] != col_offsets["<<iiblock<<"]");
+
+   MFEM_ASSERT(Aij(iiblock, iiblock),
+               "BlockMatrix::EliminateRowCol: Null diagonal block");
+
+   MFEM_ASSERT(row_offsets == Ae.RowOffsets() && col_offsets == Ae.ColOffsets(),
+               "BlockMatrix::EliminateRowCol: Eliminated row/col matrix size does not match");
+
+   MFEM_ASSERT(Ae.IsZeroBlock(iiblock, iiblock) == 0,
+               "BlockMatrix::EliminateRowCol: Null diagonal block of the eliminated row/col matrix");
+
+   // Apply the constraint idx to the iiblock
+   for (int jjblock = 0; jjblock < nRowBlocks; ++jjblock)
+   {
+      if (iiblock == jjblock) { continue; }
+      if (Aij(iiblock,jjblock)) { Aij(iiblock,jjblock)->EliminateRow(idx, Ae.GetBlock(iiblock,jjblock)); }
+   }
+   for (int jjblock = 0; jjblock < nRowBlocks; ++jjblock)
+   {
+      if (iiblock == jjblock) { continue; }
+      if (Aij(jjblock,iiblock)) { Aij(jjblock,iiblock)->EliminateCol(idx, Ae.GetBlock(jjblock,iiblock)); }
+   }
+   Aij(iiblock, iiblock)->EliminateRowCol(idx, Ae.GetBlock(iiblock,iiblock),
+                                          dpolicy);
 }
 
 void BlockMatrix::EliminateRowCol(Array<int> & ess_bc_dofs, Vector & sol,

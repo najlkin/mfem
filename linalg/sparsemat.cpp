@@ -1592,6 +1592,78 @@ void SparseMatrix::EliminateRow(int row, DiagonalPolicy dpolicy)
    }
 }
 
+void SparseMatrix::EliminateRow(int row, SparseMatrix &Ae,
+                                DiagonalPolicy dpolicy)
+{
+   RowNode *aux;
+
+   MFEM_ASSERT(row < height && row >= 0,
+               "Row " << row << " not in matrix of height " << height);
+   MFEM_ASSERT(dpolicy != DIAG_KEEP, "Diagonal policy must not be DIAG_KEEP");
+   MFEM_ASSERT(dpolicy != DIAG_ONE || height == width,
+               "if dpolicy == DIAG_ONE, matrix must be square, not height = "
+               << height << ",  width = " << width);
+
+   if (Rows == NULL)
+   {
+      for (int i=I[row]; i < I[row+1]; ++i)
+      {
+         const int col = J[i];
+         if (col == row)
+         {
+            switch (dpolicy)
+            {
+               case DIAG_ONE:
+                  Ae.Add(row, col, A[i] - 1.0);
+                  A[i] = 1.0;
+                  break;
+               case DIAG_ZERO:
+                  Ae.Add(row, col, A[i]);
+                  A[i] = 0.;
+                  break;
+               default:
+                  mfem_error("SparseMatrix::EliminateRow #1");
+                  break;
+            }
+         }
+         else
+         {
+            Ae.Add(row, col, A[i]);
+            A[i] = 0.0;
+         }
+      }
+   }
+   else
+   {
+      for (aux = Rows[row]; aux != NULL; aux = aux->Prev)
+      {
+         const int col = aux->Column;
+         if (col == row)
+         {
+            switch (dpolicy)
+            {
+               case DIAG_ONE:
+                  Ae.Add(row, col, aux->Value - 1.0);
+                  aux->Value = 1.0;
+                  break;
+               case DIAG_ZERO:
+                  Ae.Add(row, col, aux->Value);
+                  aux->Value = 0.;
+                  break;
+               default:
+                  mfem_error("SparseMatrix::EliminateRow #2");
+                  break;
+            }
+         }
+         else
+         {
+            Ae.Add(row, col, aux->Value);
+            aux->Value = 0.0;
+         }
+      }
+   }
+}
+
 void SparseMatrix::EliminateCol(int col, DiagonalPolicy dpolicy)
 {
    MFEM_ASSERT(col < width && col >= 0,
@@ -1630,6 +1702,92 @@ void SparseMatrix::EliminateCol(int col, DiagonalPolicy dpolicy)
    if (dpolicy == DIAG_ONE)
    {
       SearchRow(col, col) = 1.0;
+   }
+}
+
+void SparseMatrix::EliminateCol(int col, SparseMatrix &Ae,
+                                DiagonalPolicy dpolicy)
+{
+   MFEM_ASSERT(col < width && col >= 0,
+               "Col " << col << " not in matrix of width " << width);
+   MFEM_ASSERT(dpolicy != DIAG_KEEP, "Diagonal policy must not be DIAG_KEEP");
+   MFEM_ASSERT(dpolicy != DIAG_ONE || height == width,
+               "if dpolicy == DIAG_ONE, matrix must be square, not height = "
+               << height << ",  width = " << width);
+
+   if (Rows == NULL)
+   {
+      for (int row = 0; row < height; row++)
+      {
+         for (int i = I[row]; i < I[row+1]; i++)
+         {
+            if (J[i] != col)
+            {
+               continue;
+            }
+
+            if (row == col)
+            {
+               switch (dpolicy)
+               {
+                  case DIAG_ONE:
+                     Ae.Add(row, col, A[i] - 1.0);
+                     A[i] = 1.0;
+                     break;
+                  case DIAG_ZERO:
+                     Ae.Add(row, col, A[i]);
+                     A[i] = 0.;
+                     break;
+                  default:
+                     mfem_error("SparseMatrix::EliminateCol #1");
+                     break;
+               }
+            }
+            else
+            {
+               Ae.Add(row, col, A[i]);
+               A[i] = 0.0;
+            }
+            break;
+         }
+      }
+   }
+   else
+   {
+      for (int row = 0; row < height; row++)
+      {
+         for (RowNode *aux = Rows[row]; aux != NULL; aux = aux->Prev)
+         {
+            if (aux->Column != col)
+            {
+               continue;
+            }
+
+            if (row == col)
+            {
+               switch (dpolicy)
+               {
+                  case DIAG_ONE:
+                     Ae.Add(row, col, aux->Value - 1.0);
+                     aux->Value = 1.0;
+                     break;
+                  case DIAG_ZERO:
+                     Ae.Add(row, col, aux->Value);
+                     aux->Value = 0.;
+                     break;
+                  default:
+                     mfem_error("SparseMatrix::EliminateCol #2");
+                     break;
+               }
+            }
+            else
+            {
+               Ae.Add(row, col, aux->Value);
+               aux->Value = 0.0;
+            }
+            break;
+         }
+      }
    }
 }
 
