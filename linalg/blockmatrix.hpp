@@ -87,6 +87,17 @@ public:
    */
    void EliminateRowCol(Array<int> & ess_bc_dofs, Vector & sol, Vector & rhs);
 
+   //! Symmetric elimination of the marked degree of freedom.
+   /**
+     @param ess_bc_dofs  marker of the degree of freedom to be eliminated
+                         dof i is eliminated if @a ess_bc_dofs[i] = 1.
+     @param Ae           block matrix storing eliminated dofs with the same
+                         structure as (*this)
+     @param dpolicy      diagonal entries policy.
+   */
+   void EliminateRowCol(Array<int> & ess_bc_dofs, BlockMatrix &Ae,
+                        DiagonalPolicy dpolicy = DIAG_ONE);
+
    ///  Finalize all the submatrices
    virtual void Finalize(int skip_zeros = 1) { Finalize(skip_zeros, false); }
    /// A slightly more general version of the Finalize(int) method.
