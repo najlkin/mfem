@@ -40,12 +40,12 @@ EABilinearFormExtension::EABilinearFormExtension(BilinearForm *form)
    : BilinearFormExtension(form),
      fes(a->FESpace())
 {
-   elem_restrict_lex = fes->GetElementRestriction(
+   elem_restrict_nat = fes->GetElementRestriction(
                           ElementDofOrdering::NATIVE);
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      localX.SetSize(elem_restrict_lex->Height(), Device::GetMemoryType());
-      localY.SetSize(elem_restrict_lex->Height(), Device::GetMemoryType());
+      localX.SetSize(elem_restrict_nat->Height(), Device::GetMemoryType());
+      localY.SetSize(elem_restrict_nat->Height(), Device::GetMemoryType());
       localY.UseDevice(true); // ensure 'localY = 0.0' is done on device
    }
 }
@@ -59,12 +59,12 @@ void EABilinearFormExtension::Update()
 {
    fes = a->FESpace();
    height = width = fes->GetVSize();
-   elem_restrict_lex = fes->GetElementRestriction(
+   elem_restrict_nat = fes->GetElementRestriction(
                           ElementDofOrdering::NATIVE);
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      localX.SetSize(elem_restrict_lex->Height());
-      localY.SetSize(elem_restrict_lex->Height());
+      localX.SetSize(elem_restrict_nat->Height());
+      localY.SetSize(elem_restrict_nat->Height());
    }
 }
 
@@ -96,14 +96,14 @@ void EABilinearFormExtension::Mult(const Vector &x, Vector &y) const
    const int ndofs_el = fes->GetFE(0)->GetDof();
    const int vdim = fes->GetVDim();
 
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      MFEM_ASSERT(elem_restrict_lex->Height() == ndofs_el * vdim * NE,
+      MFEM_ASSERT(elem_restrict_nat->Height() == ndofs_el * vdim * NE,
                   "E-vector size is not NDOFS x VDIM x NE");
       tensorX.UseExternalData(localX.GetData(), ndofs_el, vdim, NE);
       tensorY.UseExternalData(localY.GetData(), ndofs_el, vdim, NE);
 
-      elem_restrict_lex->Mult(x, localX);
+      elem_restrict_nat->Mult(x, localX);
    }
    else
    {
@@ -114,23 +114,17 @@ void EABilinearFormExtension::Mult(const Vector &x, Vector &y) const
    }
 
    DenseMatrix elmat;
-   Vector locX, locY;
 
    for (int i = 0; i < NE; i++)
    {
       a->ComputeElementMatrix(i, elmat);
 
-      for (int d = 0; d < fes->GetVDim(); d++)
-      {
-         tensorX(i).GetColumnReference(d, locX);
-         tensorY(i).GetColumnReference(d, locY);
-         elmat.Mult(locX, locY);
-      }
+      mfem::Mult(elmat, tensorX(i), tensorY(i));
    }
 
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      elem_restrict_lex->MultTranspose(localY, y);
+      elem_restrict_nat->MultTranspose(localY, y);
    }
 }
 
@@ -141,14 +135,14 @@ void EABilinearFormExtension::MultTranspose(const Vector &x, Vector &y) const
    const int ndofs_el = fes->GetFE(0)->GetDof();
    const int vdim = fes->GetVDim();
 
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      MFEM_ASSERT(elem_restrict_lex->Height() == ndofs_el * vdim * NE,
+      MFEM_ASSERT(elem_restrict_nat->Height() == ndofs_el * vdim * NE,
                   "E-vector size is not NDOFS x VDIM x NE");
       tensorX.UseExternalData(localX.GetData(), ndofs_el, vdim, NE);
       tensorY.UseExternalData(localY.GetData(), ndofs_el, vdim, NE);
 
-      elem_restrict_lex->Mult(x, localX);
+      elem_restrict_nat->Mult(x, localX);
    }
    else
    {
@@ -159,23 +153,17 @@ void EABilinearFormExtension::MultTranspose(const Vector &x, Vector &y) const
    }
 
    DenseMatrix elmat;
-   Vector locX, locY;
 
    for (int i = 0; i < NE; i++)
    {
       a->ComputeElementMatrix(i, elmat);
 
-      for (int d = 0; d < fes->GetVDim(); d++)
-      {
-         tensorX(i).GetColumnReference(d, locX);
-         tensorY(i).GetColumnReference(d, locY);
-         elmat.MultTranspose(locX, locY);
-      }
+      mfem::MultTranspose(elmat, tensorX(i), tensorY(i));
    }
 
-   if (elem_restrict_lex)
+   if (elem_restrict_nat)
    {
-      elem_restrict_lex->MultTranspose(localY, y);
+      elem_restrict_nat->MultTranspose(localY, y);
    }
 }
 

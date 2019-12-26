@@ -77,7 +77,7 @@ class EABilinearFormExtension : public BilinearFormExtension
 protected:
    const FiniteElementSpace *fes; // Not owned
    mutable Vector localX, localY;
-   const Operator *elem_restrict_lex; // Not owned
+   const Operator *elem_restrict_nat; // Not owned
 
 public:
    EABilinearFormExtension(BilinearForm *form);
