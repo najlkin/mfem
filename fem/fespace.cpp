@@ -2683,7 +2683,8 @@ ElementRestriction::ElementRestriction(const FiniteElementSpace &f,
    {
       for (int d = 0; d < dof; ++d)
       {
-         const int gid = elementMap[dof*e + d];
+         const int sgid = elementMap[dof*e + d];
+         const int gid = (sgid < 0)?(-1-sgid):(sgid);
          ++offsets[gid + 1];
       }
    }
@@ -2698,9 +2699,10 @@ ElementRestriction::ElementRestriction(const FiniteElementSpace &f,
       for (int d = 0; d < dof; ++d)
       {
          const int did = (!dof_reorder)?d:dof_map[d];
-         const int gid = elementMap[dof*e + did];
+         const int sgid = elementMap[dof*e + did];
+         const int gid = (sgid < 0)?(-1-sgid):(sgid);
          const int lid = dof*e + d;
-         indices[offsets[gid]++] = lid;
+         indices[offsets[gid]++] = (sgid < 0)?(-1-lid):(lid);
       }
    }
    // We shifted the offsets vector by 1 by using it as a counter.
@@ -2731,8 +2733,9 @@ void ElementRestriction::Mult(const Vector& x, Vector& y) const
          const double dofValue = d_x(t?c:i,t?i:c);
          for (int j = offset; j < nextOffset; ++j)
          {
-            const int idx_j = d_indices[j];
-            d_y(idx_j % nd, c, idx_j / nd) = dofValue;
+            const int sidx_j = d_indices[j];
+            const int idx_j = (sidx_j < 0)?(-1-sidx_j):(sidx_j);
+            d_y(idx_j % nd, c, idx_j / nd) = (sidx_j < 0)?(-dofValue):(dofValue);
          }
       }
    });
@@ -2757,8 +2760,10 @@ void ElementRestriction::MultTranspose(const Vector& x, Vector& y) const
          double dofValue = 0;
          for (int j = offset; j < nextOffset; ++j)
          {
-            const int idx_j = d_indices[j];
-            dofValue +=  d_x(idx_j % nd, c, idx_j / nd);
+            const int sidx_j = d_indices[j];
+            const int idx_j = (sidx_j < 0)?(-1-sidx_j):(sidx_j);
+            const double dof_x = d_x(idx_j % nd, c, idx_j / nd);
+            dofValue += (sidx_j < 0)?(-dof_x):(dof_x);
          }
          d_y(t?c:i,t?i:c) = dofValue;
       }
