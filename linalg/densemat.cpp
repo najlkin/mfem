@@ -3284,7 +3284,7 @@ void MultTranspose(const DenseMatrix &b, const DenseMatrix &c, DenseMatrix &a)
    static double alpha = 1.0, beta = 0.0;
    int m = b.Width(), n = c.Width(), k = b.Height();
 
-   dgemm_(&transa, &transb, &m, &n, &k, &alpha, b.Data(), &m,
+   dgemm_(&transa, &transb, &m, &n, &k, &alpha, b.Data(), &k,
           c.Data(), &k, &beta, a.Data(), &m);
 #else
    const int ah = a.Height();
@@ -3353,7 +3353,7 @@ void AddMultTranspose(const DenseMatrix &b, const DenseMatrix &c,
    static double alpha = 1.0, beta = 1.0;
    int m = b.Width(), n = c.Width(), k = b.Height();
 
-   dgemm_(&transa, &transb, &m, &n, &k, &alpha, b.Data(), &m,
+   dgemm_(&transa, &transb, &m, &n, &k, &alpha, b.Data(), &k,
           c.Data(), &k, &beta, a.Data(), &m);
 #else
    const int ah = a.Height();
