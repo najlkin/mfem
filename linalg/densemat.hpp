@@ -498,8 +498,15 @@ bool LinearSolve(DenseMatrix& A, double* X, double TOL = 1.e-9);
 /// Matrix matrix multiplication.  A = B * C.
 void Mult(const DenseMatrix &b, const DenseMatrix &c, DenseMatrix &a);
 
+/// Matrix matrix multiplication.  A = B^t * C.
+void MultTranspose(const DenseMatrix &b, const DenseMatrix &c, DenseMatrix &a);
+
 /// Matrix matrix multiplication.  A += B * C.
 void AddMult(const DenseMatrix &b, const DenseMatrix &c, DenseMatrix &a);
+
+/// Matrix matrix multiplication.  A += B^t * C.
+void AddMultTranspose(const DenseMatrix &b, const DenseMatrix &c,
+                      DenseMatrix &a);
 
 /// Matrix matrix multiplication.  A += alpha * B * C.
 void AddMult_a(double alpha, const DenseMatrix &b, const DenseMatrix &c,
