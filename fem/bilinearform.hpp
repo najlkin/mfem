@@ -770,6 +770,16 @@ public:
 
    virtual void EliminateTestDofs(const Array<int> &bdr_attr_is_ess);
 
+   /// Return the trial FE space associated with the MixedBilinearForm.
+   FiniteElementSpace *FESpaceTrial() { return trial_fes; }
+   /// Read-only access to the associated trial FiniteElementSpace.
+   const FiniteElementSpace *FESpaceTrial() const { return trial_fes; }
+
+   /// Return the test FE space associated with the MixedBilinearForm.
+   FiniteElementSpace *FESpaceTest() { return test_fes; }
+   /// Read-only access to the associated test FiniteElementSpace.
+   const FiniteElementSpace *FESpaceTest() const { return test_fes; }
+
    void Update();
 
    virtual ~MixedBilinearForm();
