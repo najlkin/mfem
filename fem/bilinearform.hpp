@@ -684,6 +684,16 @@ public:
        corresponding pointer (to Array<int>) will be NULL. */
    Array<Array<int>*> *GetBBFI_Marker() { return &bbfi_marker; }
 
+   /// Access all integrators added with AddInteriorFaceIntegrator().
+   Array<BilinearFormIntegrator*> *GetFBFI() { return &fbfi; }
+
+   /// Access all integrators added with AddBdrFaceIntegrator().
+   Array<BilinearFormIntegrator*> *GetBFBFI() { return &bfbfi; }
+   /** @brief Access all boundary markers added with AddBdrFaceIntegrator().
+       If no marker was specified when the integrator was added, the
+       corresponding pointer (to Array<int>) will be NULL. */
+   Array<Array<int>*> *GetBFBFI_Marker() { return &bfbfi_marker; }
+
    /// Access all integrators added with AddTraceFaceIntegrator().
    Array<BilinearFormIntegrator*> *GetTFBFI() { return &tfbfi; }
 
