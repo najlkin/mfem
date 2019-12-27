@@ -314,6 +314,82 @@ void BilinearForm::ComputeBdrElementMatrix(int i, DenseMatrix &elmat)
    }
 }
 
+void BilinearForm::ComputeFaceElementMatrix(int i, DenseMatrix &elmat)
+{
+   FaceElementTransformations *tr;
+   Mesh *mesh = fes -> GetMesh();
+   tr = mesh -> GetFaceElementTransformations (i);
+
+   if (fbfi.Size())
+   {
+      const FiniteElement *fe1, *fe2;
+      fe1 = fes->GetFE(tr->Elem1No);
+      if (tr->Elem2No >= 0)
+      {
+         fe2 = fes->GetFE(tr->Elem2No);
+      }
+      else
+      {
+         // The fe2 object is really a dummy and not used on the
+         // boundaries, but we can't dereference a NULL pointer, and we don't
+         // want to actually make a fake element.
+         fe2 = fe1;
+      }
+
+      fbfi[0] -> AssembleFaceMatrix (*fe1, *fe2, *tr, elmat);
+      for (int k = 1; k < fbfi.Size(); k++)
+      {
+         fbfi[k] -> AssembleFaceMatrix (*fe1, *fe2, *tr, elemmat);
+         elmat += elemmat;
+      }
+   }
+   else
+   {
+      Array<int> vdofs2;
+
+      fes->GetElementVDofs(tr->Elem1No, vdofs);
+      if (tr->Elem2No >= 0)
+      {
+         fes->GetElementVDofs(tr->Elem2No, vdofs2);
+         vdofs.Append(vdofs2);
+      }
+      elmat.SetSize(vdofs.Size(), vdofs.Size());
+      elmat = 0.0;
+   }
+}
+
+void BilinearForm::ComputeBdrFaceElementMatrix(int i, DenseMatrix &elmat)
+{
+   FaceElementTransformations *tr;
+   Mesh *mesh = fes -> GetMesh();
+   tr = mesh -> GetBdrFaceTransformations (i);
+
+   if (bfbfi.Size())
+   {
+
+      const FiniteElement *fe1, *fe2;
+
+      fe1 = fes -> GetFE (tr -> Elem1No);
+      // The fe2 object is really a dummy and not used on the boundaries,
+      // but we can't dereference a NULL pointer, and we don't want to
+      // actually make a fake element.
+      fe2 = fe1;
+
+      bfbfi[0] -> AssembleFaceMatrix (*fe1, *fe2, *tr, elmat);
+      for (int k = 1; k < bfbfi.Size(); k++)
+      {
+         bfbfi[k] -> AssembleFaceMatrix (*fe1, *fe2, *tr, elemmat);
+         elmat += elemmat;
+      }
+   }
+   else
+   {
+      fes -> GetElementVDofs (tr -> Elem1No, vdofs);
+      elmat.SetSize(vdofs.Size(), vdofs.Size());
+      elmat = 0.0;
+   }
+}
+
 void BilinearForm::AssembleElementMatrix(
    int i, const DenseMatrix &elmat, int skip_zeros)
 {
