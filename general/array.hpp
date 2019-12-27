@@ -238,7 +238,7 @@ public:
    }
 
    /// return true if the array is sorted.
-   int IsSorted();
+   int IsSorted() const;
 
    /// Partial Sum
    void PartialSum();
