@@ -752,6 +752,26 @@ public:
 };
 
 
+/// General sum operator: x -> alpha * A(x) + beta * B(x)
+class SumOperator : public Operator
+{
+   const Operator *A, *B;
+   bool ownA, ownB;
+   double alpha, beta;
+   mutable Vector z;
+
+public:
+   SumOperator(const Operator *A, const Operator *B, bool ownA, bool ownB,
+               double alpha = 1., double beta = 1.);
+
+   virtual void Mult(const Vector &x, Vector &y) const;
+
+   virtual void MultTranspose(const Vector &x, Vector &y) const;
+
+   virtual ~SumOperator();
+};
+
+
 /// The operator x -> R*A*P*x constructed through the actions of R^T, A and P
 class RAPOperator : public Operator
 {

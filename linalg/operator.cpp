@@ -324,6 +324,65 @@ ProductOperator::~ProductOperator()
 }
 
 
+SumOperator::SumOperator(const Operator *A, const Operator *B,
+                         bool ownA, bool ownB, double alpha, double beta)
+   : Operator(A->Height(), A->Width()),
+     A(A), B(B), ownA(ownA), ownB(ownB), alpha(alpha), beta(beta),
+     z(std::max(A->Width(), A->Height()))
+{
+   MFEM_VERIFY(A->Width() == B->Width(),
+               "incompatible Operators: A->Width() = " << A->Width()
+               << ", B->Width() = " << B->Width());
+   MFEM_VERIFY(A->Height() == B->Height(),
+               "incompatible Operators: A->Height() = " << A->Height()
+               << ", B->Height() = " << B->Height());
+}
+
+void SumOperator::Mult(const Vector &x, Vector &y) const
+{
+   z.SetSize(A->Height());
+
+   A->Mult(x, y);
+   if (alpha != 1.)
+   {
+      y *= alpha;
+   }
+
+   B->Mult(x, z);
+   if (beta != 1.)
+   {
+      z *= beta;
+   }
+
+   y += z;
+}
+
+void SumOperator::MultTranspose(const Vector &x, Vector &y) const
+{
+   z.SetSize(A->Width());
+
+   A->MultTranspose(x, y);
+   if (alpha != 1.)
+   {
+      y *= alpha;
+   }
+
+   B->MultTranspose(x, z);
+   if (beta != 1.)
+   {
+      z *= beta;
+   }
+
+   y += z;
+}
+
+SumOperator::~SumOperator()
+{
+   if (ownA) { delete A; }
+   if (ownB) { delete B; }
+}
+
+
 RAPOperator::RAPOperator(const Operator &Rt_, const Operator &A_,
                          const Operator &P_)
    : Operator(Rt_.Width(), P_.Width()), Rt(Rt_), A(A_), P(P_)
