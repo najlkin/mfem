@@ -57,14 +57,14 @@ public:
     * op: the Operator to be inserted.
     * c: optional scalar multiple for this block.
     */
-   void SetDiagonalBlock(int iblock, Operator *op, double c = 1.0);
+   void SetDiagonalBlock(int iblock, const Operator *op, double c = 1.0);
    //! Add a block op in the block-entry (iblock, jblock).
    /**
     * irow, icol: The block will be inserted in location (irow, icol).
     * op: the Operator to be inserted.
     * c: optional scalar multiple for this block.
     */
-   void SetBlock(int iRow, int iCol, Operator *op, double c = 1.0);
+   void SetBlock(int iRow, int iCol, const Operator *op, double c = 1.0);
 
    //! Return the number of row blocks
    int NumRowBlocks() const { return nRowBlocks; }
@@ -74,7 +74,7 @@ public:
    //! Check if block (i,j) is a zero block
    int IsZeroBlock(int i, int j) const { return (op(i,j)==NULL) ? 1 : 0; }
    //! Return a reference to block i,j
-   Operator & GetBlock(int i, int j)
+   const Operator & GetBlock(int i, int j)
    { MFEM_VERIFY(op(i,j), ""); return *op(i,j); }
    //! Return the coefficient for block i,j
    double GetBlockCoef(int i, int j) const
@@ -110,7 +110,7 @@ private:
    //! Column offsets for the starting position of each block
    Array<int> col_offsets;
    //! 2D array that stores each block of the operator.
-   Array2D<Operator *> op;
+   Array2D<const Operator *> op;
    //! 2D array that stores a coefficient for each block of the operator.
    Array2D<double> coef;
 
