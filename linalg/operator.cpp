@@ -327,15 +327,18 @@ ProductOperator::~ProductOperator()
 SumOperator::SumOperator(const Operator *A, const Operator *B,
                          bool ownA, bool ownB, double alpha, double beta)
    : Operator(A->Height(), A->Width()),
-     A(A), B(B), ownA(ownA), ownB(ownB), alpha(alpha), beta(beta),
-     z(std::max(A->Width(), A->Height()))
+     A(A), B(B), ownA(ownA), ownB(ownB), alpha(alpha), beta(beta)
 {
-   MFEM_VERIFY(A->Width() == B->Width(),
-               "incompatible Operators: A->Width() = " << A->Width()
-               << ", B->Width() = " << B->Width());
-   MFEM_VERIFY(A->Height() == B->Height(),
-               "incompatible Operators: A->Height() = " << A->Height()
-               << ", B->Height() = " << B->Height());
+   if (B)
+   {
+      MFEM_VERIFY(A->Width() == B->Width(),
+                  "incompatible Operators: A->Width() = " << A->Width()
+                  << ", B->Width() = " << B->Width());
+      MFEM_VERIFY(A->Height() == B->Height(),
+                  "incompatible Operators: A->Height() = " << A->Height()
+                  << ", B->Height() = " << B->Height());
+      z.SetSize(std::max(A->Width(), A->Height()));
+   }
 }
 
 void SumOperator::Mult(const Vector &x, Vector &y) const
@@ -348,13 +351,16 @@ void SumOperator::Mult(const Vector &x, Vector &y) const
       y *= alpha;
    }
 
-   B->Mult(x, z);
-   if (beta != 1.)
+   if (B)
    {
-      z *= beta;
-   }
+      B->Mult(x, z);
+      if (beta != 1.)
+      {
+         z *= beta;
+      }
 
-   y += z;
+      y += z;
+   }
 }
 
 void SumOperator::MultTranspose(const Vector &x, Vector &y) const
@@ -367,13 +373,16 @@ void SumOperator::MultTranspose(const Vector &x, Vector &y) const
       y *= alpha;
    }
 
-   B->MultTranspose(x, z);
-   if (beta != 1.)
+   if (B)
    {
-      z *= beta;
-   }
+      B->MultTranspose(x, z);
+      if (beta != 1.)
+      {
+         z *= beta;
+      }
 
-   y += z;
+      y += z;
+   }
 }
 
 SumOperator::~SumOperator()
