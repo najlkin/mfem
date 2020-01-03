@@ -217,6 +217,111 @@ inline void BlockMatrix::findGlobalCol(int jglobal, int & jblock,
    jloc = jglobal - col_offsets[jblock];
 }
 
+
+//! @class SparseBlockMatrix
+/**
+ * \brief A class storing uniform blocks of given size in sparse fashion
+ */
+class SparseBlockMatrix : public Matrix
+{
+public:
+   //! Constructor for square sparse block matrices
+   /**
+     @param s     number of blocks rows and columns
+     @param bs    size of the blocks
+    */
+   SparseBlockMatrix(int s, int bs) : SparseBlockMatrix(s, s, bs, bs) { }
+
+   //! Constructor for rectangular sparse block matrices
+   /**
+     @param h     number of block rows
+     @param w     number of block columns
+     @param bh    height of the blocks
+     @param bw    width of the blocks
+    */
+   SparseBlockMatrix(int h, int w, int bh, int bw);
+
+   /// Returns the number of block rows
+   inline int NumRowBlocks() const { return blocks.NumRows(); }
+   /// Return the number of block columns
+   inline int NumColBlocks() const { return blocks.NumCols(); }
+
+   /// Adds the value @a a to the matrix: A(i,j) += a
+   /// @note A new block is allocated when being zero
+   void Add(const int i, const int j, const double a);
+
+   /// Sets the value @a a to the matrix: A(i,j) = a
+   /// @note A new block is allocated when being zero
+   void Set(const int i, const int j, const double a);
+
+   /// Return the total number of non-zero blocks
+   int NumNonZeroBlocks() const;
+
+   //! Check if block (i,j) is a zero block.
+   int IsZeroBlock(int i, int j) const { return (blocks(i,j) == NULL)?(1):(0); }
+
+   /// Returns reference to block (i,j). May be invalid when the block is zero
+   DenseMatrix& GetBlock(int i, int j);
+
+   /// Returns reference to constant block (i,j). May be invalid when the block is zero
+   const DenseMatrix& GetBlock(int i, int j) const;
+
+   /// @name Matrix interface
+   ///@{
+
+   /// Returns reference to a_{ij}.
+   virtual double& Elem(int i, int j);
+
+   /// Returns constant reference to a_{ij}.
+   virtual const double& Elem(int i, int j) const;
+
+   /// Returns a pointer to (approximation) of the matrix inverse.
+   virtual MatrixInverse* Inverse() const
+   {
+      mfem_error("SparseBlockMatrix::Inverse not implemented \n");
+      return static_cast<MatrixInverse*>(NULL);
+   }
+
+   /// Prints matrix to stream out.
+   virtual void Print(std::ostream & out = mfem::out, int width_ = 4) const;
+   ///@}
+
+   ///@name Operator interface
+   ///@{
+
+   /// Matrix-Vector Multiplication y = A*x
+   virtual void Mult(const Vector &x, Vector &y) const;
+
+   /// MatrixTranspose-Vector Multiplication y = A'*x
+   virtual void MultTranspose(const Vector &x, Vector &y) const;
+   ///@}
+
+   //! Destructor
+   ~SparseBlockMatrix();
+
+private:
+   //! 2D array that stores each block of the BlockMatrix. Aij(iblock, jblock)
+   //! == NULL if block (iblock, jblock) is all zeros.
+   Array2D<DenseMatrix*> blocks;
+   //! height of a single block
+   int block_height;
+   //! width of a single block
+   int block_width;
+
+   //! Converts the global to block and sub-block indices
+   inline void GetBlockIndices(const int i, const int j, int &ci, int &cj, int &bi,
+                               int &bj) const;
+};
+
+void SparseBlockMatrix::GetBlockIndices(const int i, const int j, int &ci,
+                                        int &cj, int &bi, int &bj) const
+{
+   ci = i / block_height;
+   cj = j / block_width;
+   bi = i % block_height;
+   bj = j % block_width;
+}
+
 }
 
 #endif /* MFEM_BLOCKMATRIX */

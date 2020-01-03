@@ -812,4 +812,179 @@ BlockMatrix * Mult(const BlockMatrix & A, const BlockMatrix & B)
    return C;
 }
 
+
+SparseBlockMatrix::SparseBlockMatrix(int h, int w, int bh, int bw)
+   : Matrix(h * bh, w * bw)
+{
+   MFEM_ASSERT(h > 0 && w > 0 && bh > 0 && bw > 0,
+               "Invalid sizes.");
+
+   blocks.SetSize(h, w);
+   blocks = NULL;
+
+   block_height = bh;
+   block_width = bw;
+}
+
+void SparseBlockMatrix::Add(const int i, const int j, const double a)
+{
+   int ci, cj, bi, bj;
+   GetBlockIndices(i, j, ci, cj, bi, bj);
+   if (!blocks(ci,cj))
+   {
+      blocks(ci,cj) = new DenseMatrix(block_height, block_width);
+      *blocks(ci,cj) = 0.;
+   }
+   blocks(ci,cj)->Elem(bi, bj) += a;
+}
+
+void SparseBlockMatrix::Set(const int i, const int j, const double a)
+{
+   int ci, cj, bi, bj;
+   GetBlockIndices(i, j, ci, cj, bi, bj);
+   if (!blocks(ci,cj))
+   {
+      blocks(ci,cj) = new DenseMatrix(block_height, block_width);
+      *blocks(ci,cj) = 0.;
+   }
+   blocks(ci,cj)->Elem(bi, bj) = a;
+}
+
+int SparseBlockMatrix::NumNonZeroBlocks() const
+{
+   int nnz = 0;
+   for (int i = 0; i < NumRowBlocks(); i++)
+   {
+      for (int j = 0; j < NumColBlocks(); j++)
+      {
+         if (blocks(i,j))
+         {
+            nnz++;
+         }
+      }
+   }
+   return nnz;
+}
+
+DenseMatrix& SparseBlockMatrix::GetBlock(int i, int j)
+{
+   MFEM_ASSERT(blocks(i,j) != NULL, "Block is not allocated.");
+   return *blocks(i,j);
+}
+
+const DenseMatrix& SparseBlockMatrix::GetBlock(int i, int j) const
+{
+   MFEM_ASSERT(blocks(i,j) != NULL, "Block is not allocated.");
+   return *blocks(i,j);
+}
+
+double& SparseBlockMatrix::Elem(int i, int j)
+{
+   int ci, cj, bi, bj;
+   GetBlockIndices(i, j, ci, cj, bi, bj);
+   MFEM_ASSERT(blocks(ci,cj), "Block is not allocated.");
+   return blocks(ci,cj)->Elem(bi,bj);
+}
+
+const double& SparseBlockMatrix::Elem(int i, int j) const
+{
+   int ci, cj, bi, bj;
+   GetBlockIndices(i, j, ci, cj, bi, bj);
+   MFEM_ASSERT(blocks(ci,cj), "Block is not allocated.");
+   return blocks(ci,cj)->Elem(bi,bj);
+}
+
+void SparseBlockMatrix::Print(std::ostream & out, int width_) const
+{
+   // save current output flags
+   std::ios::fmtflags old_flags = out.flags();
+   // output flags = scientific + show sign
+   //out << setiosflags(ios::scientific | ios::showpos);
+   for (int i = 0; i < NumRowBlocks(); i++)
+   {
+      out << "[row " << i << "]\n";
+      for (int j = 0; j < NumColBlocks(); j++)
+      {
+         if (!blocks(i,j))
+         {
+            continue;
+         }
+         out << "[col " << j << "]\n";
+         for (int bi = 0; bi < block_height; bi++)
+            for (int bj = 0; bj < block_width; bj++)
+            {
+               out << (*blocks(i,j))(bi,bj);
+               if (bj+1 == block_width || (bj+1) % width_ == 0)
+               {
+                  out << '\n';
+               }
+               else
+               {
+                  out << ' ';
+               }
+            }
+      }
+   }
+   // reset output flags to original values
+   out.flags(old_flags);
+}
+
+void SparseBlockMatrix::Mult(const Vector &x, Vector &y) const
+{
+   MFEM_ASSERT(x.Size() == width && y.Size() == height,
+               "Sizes of the vectors do not match");
+
+   Vector bx, by;
+
+   for (int i = 0; i < NumRowBlocks(); i++)
+   {
+      by.NewDataAndSize(y.GetData() + i * block_height, block_height);
+      by = 0.;
+      for (int j = 0; j < NumColBlocks(); j++)
+      {
+         if (!blocks(i,j))
+         {
+            continue;
+         }
+         bx.NewDataAndSize(x.GetData() + j * block_width, block_width);
+         blocks(i,j)->AddMult(bx, by);
+      }
+   }
+}
+
+void SparseBlockMatrix::MultTranspose(const Vector &x, Vector &y) const
+{
+   MFEM_ASSERT(x.Size() == height && y.Size() == width,
+               "Sizes of the vectors do not match");
+
+   Vector bx, by;
+
+   for (int j = 0; j < NumColBlocks(); j++)
+   {
+      by.NewDataAndSize(y.GetData() + j * block_width, block_width);
+      by = 0.;
+      for (int i = 0; i < NumRowBlocks(); i++)
+      {
+         if (!blocks(i,j))
+         {
+            continue;
+         }
+         bx.NewDataAndSize(x.GetData() + i * block_height, block_height);
+         blocks(i,j)->AddMult(bx, by);
+      }
+   }
+}
+
+SparseBlockMatrix::~SparseBlockMatrix()
+{
+   for (int i = 0; i < blocks.NumRows(); i++)
+   {
+      for (int j = 0; j < blocks.NumCols(); j++)
+      {
+         delete blocks(i,j);
+         blocks(i,j) = NULL;
+      }
+   }
+}
+
 }
