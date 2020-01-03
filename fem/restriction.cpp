@@ -462,6 +462,43 @@ void ElementRestriction::FillJAndData(const Vector &ea_data,
    h_I[0] = 0;
 }
 
+void ElementRestriction::Square(SparseBlockMatrix &sbm) const
+{
+   MFEM_ASSERT(sbm.NumRowBlocks() == ne && sbm.NumColBlocks() == ne
+               && sbm.Width() == height && sbm.Height() == height,
+               "Size of the matrix does not match.");
+
+   for (int i = 0; i < ndofs; i++)
+   {
+      const int offset = offsets[i];
+      const int nextOffset = offsets[i+1];
+      for (int j = offset; j < nextOffset; j++)
+      {
+         const int sidx_j = indices[j];
+         const bool bidx_j = sidx_j < 0;
+         const int idx_j = (bidx_j)?(-1-sidx_j):(sidx_j);
+         for (int k = j; k < nextOffset; k++)
+         {
+            const int sidx_k = indices[k];
+            const bool bidx_k = sidx_k < 0;
+            const int idx_k = (bidx_k)?(-1-sidx_k):(sidx_k);
+
+            const double val = (bidx_j != bidx_k)?(-1.):(+1.);
+            for (int c = 0; c < vdim; c++)
+            {
+               const int ij = (idx_j / dof * vdim + c) * dof + idx_j % dof;
+               const int ik = (idx_k / dof * vdim + c) * dof + idx_k % dof;
+               sbm.Add(ij, ik, val);
+               if (ik != ij)
+               {
+                  sbm.Add(ik, ij, val);
+               }
+            }
+         }
+      }
+   }
+}
+
 L2ElementRestriction::L2ElementRestriction(const FiniteElementSpace &fes)
    : ne(fes.GetNE()),
      vdim(fes.GetVDim()),

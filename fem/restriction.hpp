@@ -74,6 +74,9 @@ public:
    /** Fill the J and Data arrays of SparseMatrix corresponding to the sparsity
        pattern given by this ElementRestriction, and the values of ea_data. */
    void FillJAndData(const Vector &ea_data, SparseMatrix &mat) const;
+
+   /// Squares the operator (i.e. multiplies it by its transpose) producing E-matrix
+   void Square(SparseBlockMatrix &sbm) const;
 };
 
 /// Operator that converts L2 FiniteElementSpace L-vectors to E-vectors.
