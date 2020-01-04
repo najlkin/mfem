@@ -866,6 +866,20 @@ int SparseBlockMatrix::NumNonZeroBlocks() const
    return nnz;
 }
 
+void SparseBlockMatrix::SetBlock(int i, int j, const DenseMatrix &b)
+{
+   MFEM_ASSERT(b.Width() == block_width && b.Height() == block_height,
+               "Sizes do not match.");
+   if (blocks(i,j))
+   {
+      *blocks(i,j) = b;
+   }
+   else
+   {
+      blocks(i,j) = new DenseMatrix(b);
+   }
+}
+
 DenseMatrix& SparseBlockMatrix::GetBlock(int i, int j)
 {
    MFEM_ASSERT(blocks(i,j) != NULL, "Block is not allocated.");
@@ -876,6 +890,52 @@ const DenseMatrix& SparseBlockMatrix::GetBlock(int i, int j) const
 {
    MFEM_ASSERT(blocks(i,j) != NULL, "Block is not allocated.");
    return *blocks(i,j);
+}
+
+SparseBlockMatrix& SparseBlockMatrix::operator=(const SparseBlockMatrix &b)
+{
+   MFEM_ASSERT(
+      b.block_height == block_height && b.block_width == block_width
+      && b.height == height && b.width == width,
+      "Sizes do not match.");
+
+   for (int i = 0; i < NumRowBlocks(); i++)
+   {
+      for (int j = 0; j < NumColBlocks(); j++)
+      {
+         if (!blocks(i,j)) { continue; }
+         MFEM_ASSERT(b.blocks(i,j), "Sparsity patterns do not match.");
+         *blocks(i,j) = *b.blocks(i,j);
+      }
+   }
+
+   return *this;
+}
+
+SparseBlockMatrix& SparseBlockMatrix::operator+=(const SparseBlockMatrix &b)
+{
+   MFEM_ASSERT(
+      b.block_height == block_height && b.block_width == block_width
+      && b.height == height && b.width == width,
+      "Sizes do not match.");
+
+   for (int i = 0; i < NumRowBlocks(); i++)
+   {
+      for (int j = 0; j < NumColBlocks(); j++)
+      {
+         if (!b.blocks(i,j)) { continue; }
+         if (!blocks(i,j))
+         {
+            blocks(i,j) = new DenseMatrix(*b.blocks(i,j));
+         }
+         else
+         {
+            *blocks(i,j) += *b.blocks(i,j);
+         }
+      }
+   }
+
+   return *this;
 }
 
 double& SparseBlockMatrix::Elem(int i, int j)
@@ -905,10 +965,7 @@ void SparseBlockMatrix::Print(std::ostream & out, int width_) const
       out << "[row " << i << "]\n";
       for (int j = 0; j < NumColBlocks(); j++)
       {
-         if (!blocks(i,j))
-         {
-            continue;
-         }
+         if (!blocks(i,j)) { continue; }
          out << "[col " << j << "]\n";
          for (int bi = 0; bi < block_height; bi++)
             for (int bj = 0; bj < block_width; bj++)
@@ -942,10 +999,7 @@ void SparseBlockMatrix::Mult(const Vector &x, Vector &y) const
       by = 0.;
       for (int j = 0; j < NumColBlocks(); j++)
       {
-         if (!blocks(i,j))
-         {
-            continue;
-         }
+         if (!blocks(i,j)) { continue; }
          bx.NewDataAndSize(x.GetData() + j * block_width, block_width);
          blocks(i,j)->AddMult(bx, by);
       }
@@ -965,10 +1019,7 @@ void SparseBlockMatrix::MultTranspose(const Vector &x, Vector &y) const
       by = 0.;
       for (int i = 0; i < NumRowBlocks(); i++)
       {
-         if (!blocks(i,j))
-         {
-            continue;
-         }
+         if (!blocks(i,j)) { continue; }
          bx.NewDataAndSize(x.GetData() + i * block_height, block_height);
          blocks(i,j)->AddMult(bx, by);
       }

@@ -260,11 +260,19 @@ public:
    //! Check if block (i,j) is a zero block.
    int IsZeroBlock(int i, int j) const { return (blocks(i,j) == NULL)?(1):(0); }
 
+   /// Sets the block (i,j) to the given matrix. The values are copied.
+   void SetBlock(int i, int j, const DenseMatrix &b);
+
    /// Returns reference to block (i,j). May be invalid when the block is zero
    DenseMatrix& GetBlock(int i, int j);
 
    /// Returns reference to constant block (i,j). May be invalid when the block is zero
    const DenseMatrix& GetBlock(int i, int j) const;
+
+   /// Copies the data from @a b assuming identical sparsity pattern
+   SparseBlockMatrix& operator=(const SparseBlockMatrix &b);
+   /// Adds the data from @a b
+   SparseBlockMatrix& operator+=(const SparseBlockMatrix &b);
 
    /// @name Matrix interface
    ///@{
