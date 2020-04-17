@@ -491,6 +491,8 @@ void SLISolver::Mult(const Vector &b, Vector &x) const
       nom0 = nom = sqrt(Dot(r, r));
    }
 
+   init_norm = sqrt(nom0);
+
    if (print_level == 1)
       mfem::out << "   Iteration : " << setw(3) << 0 << "  ||Br|| = "
                 << nom << '\n';
@@ -641,6 +643,9 @@ void CGSolver::Mult(const Vector &b, Vector &x) const
    }
    nom0 = nom = Dot(d, r);
    MFEM_ASSERT(IsFinite(nom), "nom = " << nom);
+
+   init_norm = sqrt(abs(nom0));
+
    if (print_level == 1 || print_level == 3)
    {
       mfem::out << "   Iteration : " << setw(3) << 0 << "  (B r, r) = "
@@ -931,6 +936,7 @@ void GMRESSolver::Mult(const Vector &b, Vector &x) const
    double beta = Norm(r);  // beta = ||r||
    MFEM_ASSERT(IsFinite(beta), "beta = " << beta);
 
+   init_norm = beta;
    final_norm = std::max(rel_tol*beta, abs_tol);
 
    if (beta <= final_norm)
@@ -1091,6 +1097,7 @@ void FGMRESSolver::Mult(const Vector &b, Vector &x) const
    double beta = Norm(r);  // beta = ||r||
    MFEM_ASSERT(IsFinite(beta), "beta = " << beta);
 
+   init_norm = beta;
    final_norm = std::max(rel_tol*beta, abs_tol);
 
    if (beta <= final_norm)
@@ -1308,6 +1315,7 @@ void BiCGSTABSolver::Mult(const Vector &b, Vector &x) const
       mfem::out << "   Iteration : " << setw(3) << 0
                 << "   ||r|| = " << resid << '\n';
 
+   init_norm = resid;
    Monitor(0, resid, r, x);
 
    tol_goal = std::max(resid*rel_tol, abs_tol);
@@ -1488,6 +1496,7 @@ void MINRESSolver::Mult(const Vector &b, Vector &x) const
    gamma0 = gamma1 = 1.;
    sigma0 = sigma1 = 0.;
 
+   init_norm = beta;
    norm_goal = std::max(rel_tol*eta, abs_tol);
 
    if (eta <= norm_goal)
@@ -1678,6 +1687,8 @@ void NewtonSolver::Mult(const Vector &b, Vector &x) const
 
    norm0 = norm = Norm(r);
    norm_goal = std::max(rel_tol*norm, abs_tol);
+
+   init_norm = norm0;
 
    prec->iterative_mode = false;
 
@@ -2210,6 +2221,7 @@ void SLBQPOptimizer::Mult(const Vector& xt, Vector& x) const
    const double smin = 0.1;
 
    const double tol = max(abs_tol, rel_tol*a);
+   init_norm = a;
 
    // *** Start bracketing phase of SLBQP ***
    if (print_level > 1)

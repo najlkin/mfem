@@ -81,7 +81,7 @@ protected:
 
    // stats
    mutable int final_iter, converged;
-   mutable double final_norm;
+   mutable double init_norm, final_norm;
 
    double Dot(const Vector &x, const Vector &y) const;
    double Norm(const Vector &x) const { return sqrt(Dot(x, x)); }
@@ -102,6 +102,7 @@ public:
 
    int GetNumIterations() const { return final_iter; }
    int GetConverged() const { return converged; }
+   double GetInitialNorm() const { return init_norm; }
    double GetFinalNorm() const { return final_norm; }
 
    /// This should be called before SetOperator
