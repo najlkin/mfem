@@ -87,6 +87,10 @@ public:
    Array<int> & RowOffsets() { return row_offsets; }
    //! Return the columns offsets for block starts
    Array<int> & ColOffsets() { return col_offsets; }
+   //! Return the row offsets for block starts (const version)
+   const Array<int> & RowOffsets() const { return row_offsets; }
+   //! Return the columns offsets for block starts (const version)
+   const Array<int> & ColOffsets() const { return col_offsets; }
 
    /// Operator application
    virtual void Mult (const Vector & x, Vector & y) const;
