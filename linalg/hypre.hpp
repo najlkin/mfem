@@ -615,6 +615,9 @@ protected:
    /// Combined coefficients for windowing and Chebyshev polynomials.
    double* fir_coeffs;
 
+   /// Ownership flag of the operator. Owned operator is freed in the destructor.
+   bool own_oper;
+
 public:
    /** Hypre smoother types:
        0    = Jacobi
@@ -666,6 +669,11 @@ public:
    virtual void Mult(const HypreParVector &b, HypreParVector &x) const;
    virtual void Mult(const Vector &b, Vector &x) const;
 
+   /// Sets the ownership flag of the operator
+   void SetOwnership(bool own) { own_oper = own; }
+   /// Returns the ownership flag of the operator
+   bool GetOwnership() const { return own_oper; }
+
    virtual ~HypreSmoother();
 };
 
@@ -694,6 +702,9 @@ protected:
 
    /// How to treat hypre errors.
    mutable ErrorMode error_mode;
+
+   /// Ownership flag of the operator. Owned operator is freed in the destructor.
+   bool own_oper;
 
 public:
    HypreSolver();
@@ -725,6 +736,11 @@ public:
        hypre_ParCSRComputeL1Norms() encounters zero row in a matrix, which is
        expected in some cases with the above solvers. */
    void SetErrorMode(ErrorMode err_mode) const { error_mode = err_mode; }
+
+   /// Sets the ownership flag of the operator
+   void SetOwnership(bool own) { own_oper = own; }
+   /// Returns the ownership flag of the operator
+   bool GetOwnership() const { return own_oper; }
 
    virtual ~HypreSolver();
 };

@@ -1814,6 +1814,8 @@ HypreSmoother::HypreSmoother() : Solver()
    B = X = V = Z = NULL;
    X0 = X1 = NULL;
    fir_coeffs = NULL;
+
+   own_oper = false;
 }
 
 HypreSmoother::HypreSmoother(HypreParMatrix &_A, int _type,
@@ -1833,6 +1835,7 @@ HypreSmoother::HypreSmoother(HypreParMatrix &_A, int _type,
    X0 = X1 = NULL;
    fir_coeffs = NULL;
 
+   own_oper = false;
    SetOperator(_A);
 }
 
@@ -2107,6 +2110,7 @@ HypreSmoother::~HypreSmoother()
    }
    if (X0) { delete X0; }
    if (X1) { delete X1; }
+   if (own_oper && A) { delete A; }
 }
 
 
@@ -2116,6 +2120,7 @@ HypreSolver::HypreSolver()
    setup_called = 0;
    B = X = NULL;
    error_mode = ABORT_HYPRE_ERRORS;
+   own_oper = false;
 }
 
 HypreSolver::HypreSolver(HypreParMatrix *_A)
@@ -2125,6 +2130,7 @@ HypreSolver::HypreSolver(HypreParMatrix *_A)
    setup_called = 0;
    B = X = NULL;
    error_mode = ABORT_HYPRE_ERRORS;
+   own_oper = false;
 }
 
 void HypreSolver::Mult(const HypreParVector &b, HypreParVector &x) const
@@ -2199,6 +2205,7 @@ HypreSolver::~HypreSolver()
 {
    if (B) { delete B; }
    if (X) { delete X; }
+   if (own_oper && A) { delete A; }
 }
 
 
