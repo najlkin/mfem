@@ -90,6 +90,10 @@ public:
    void Assemble(int skip_zeros = 1);
 
    /// Returns the matrix assembled on the true dofs, i.e. P^t A P.
+   /** The returned matrix is owned by the form. */
+   HypreParMatrix *ParallelAssembleInternal();
+
+   /// Returns the matrix assembled on the true dofs, i.e. P^t A P.
    /** The returned matrix has to be deleted by the caller. */
    HypreParMatrix *ParallelAssemble() { return ParallelAssemble(mat); }
 
