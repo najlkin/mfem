@@ -1544,6 +1544,7 @@ void HypreParMatrix::Destroy()
 HypreParMatrix *Add(double alpha, const HypreParMatrix &A,
                     double beta,  const HypreParMatrix &B)
 {
+   /*
    hypre_ParCSRMatrix *C_hypre =
       internal::hypre_ParCSRMatrixAdd(const_cast<HypreParMatrix &>(A),
                                       const_cast<HypreParMatrix &>(B));
@@ -1556,6 +1557,13 @@ HypreParMatrix *Add(double alpha, const HypreParMatrix &A,
    C->Add(beta, B);
 
    return C;
+   */
+   hypre_ParCSRMatrix *C;
+   hypre_ParcsrAdd(alpha, A, beta, B, &C);
+
+   hypre_MatvecCommPkgCreate(C);
+
+   return new HypreParMatrix(C);
 }
 
 HypreParMatrix * ParMult(const HypreParMatrix *A, const HypreParMatrix *B)
@@ -1571,7 +1579,9 @@ HypreParMatrix * ParMult(const HypreParMatrix *A, const HypreParMatrix *B)
 
 HypreParMatrix * ParAdd(const HypreParMatrix *A, const HypreParMatrix *B)
 {
-   hypre_ParCSRMatrix * C = internal::hypre_ParCSRMatrixAdd(*A,*B);
+   //hypre_ParCSRMatrix * C = internal::hypre_ParCSRMatrixAdd(*A,*B);
+   hypre_ParCSRMatrix *C;
+   hypre_ParcsrAdd(1., *A, 1., *B, &C);
 
    hypre_MatvecCommPkgCreate(C);
 
