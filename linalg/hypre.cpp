@@ -1933,6 +1933,10 @@ void HypreSmoother::SetOperator(const Operator &op)
       A->Mult(ones, diag);
       type = 1;
    }
+   else if (type == 6)
+   {
+      Z = new HypreParVector(*A);
+   }
    else
    {
       l1_norms = NULL;
