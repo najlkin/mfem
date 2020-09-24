@@ -38,6 +38,7 @@ private:
 
 public:
    StopWatch();
+   StopWatch(const StopWatch &);
    void Clear();
    void Start();
    void Stop();
