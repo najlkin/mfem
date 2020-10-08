@@ -504,7 +504,7 @@ void ParGridFunction::Save(std::ostream &out) const
    }
 }
 
-void ParGridFunction::SaveAsOne(std::ostream &out)
+void ParGridFunction::SaveAsOne(std::ostream &out) const
 {
    int i, p;
 
@@ -524,7 +524,7 @@ void ParGridFunction::SaveAsOne(std::ostream &out)
    int *nfdofs = new int[NRanks];
    int *nrdofs = new int[NRanks];
 
-   values[0] = data;
+   values[0] = const_cast<double*>((const double*)data);
    nv[0]     = pfes -> GetVSize();
    nvdofs[0] = pfes -> GetNVDofs();
    nedofs[0] = pfes -> GetNEDofs();
