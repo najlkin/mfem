@@ -349,7 +349,7 @@ const
 }
 
 double ParBilinearForm::InnerProduct(const ParGridFunction &x,
-                                     const ParGridFunction &y) const
+                                     const ParGridFunction &y)
 {
    MFEM_ASSERT(x.ParFESpace() == pfes, "the parallel spaces must agree");
    MFEM_ASSERT(y.ParFESpace() == pfes, "the parallel spaces must agree");
@@ -365,13 +365,14 @@ double ParBilinearForm::InnerProduct(const ParGridFunction &x,
    return res;
 }
 
-double ParBilinearForm::InnerProduct(const HypreParVector &x,
-                                     const HypreParVector &y) const
+double ParBilinearForm::InnerProduct(HypreParVector &x,
+                                     HypreParVector &y)
 {
    MFEM_VERIFY(p_mat.Ptr() != NULL, "parallel matrix must be assembled");
 
    HypreParVector *Ay = new HypreParVector(pfes);
-   p_mat->Mult(y, *Ay);
+   HypreParMatrix *A = p_mat.As<HypreParMatrix>();
+   A->Mult(y, *Ay);
 
    double res = mfem::InnerProduct(x, *Ay);
 

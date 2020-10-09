@@ -170,11 +170,11 @@ public:
    /// Compute inner product x^t A y (grid function version)
    /** @note It is assumed that the parallel system matrix is assembled,
        see FormSystemMatrix(). */
-   double InnerProduct(const ParGridFunction &x, const ParGridFunction &y) const;
+   double InnerProduct(const ParGridFunction &x, const ParGridFunction &y);
    /// Compute inner product x^t A y (vector version)
    /** @note It is assumed that the parallel system matrix is assembled,
        see FormSystemMatrix(). */
-   double InnerProduct(const HypreParVector &x, const HypreParVector &y) const;
+   double InnerProduct(HypreParVector &x, HypreParVector &y);
 
    /// Return the parallel FE space associated with the ParBilinearForm.
    ParFiniteElementSpace *ParFESpace() const { return pfes; }
