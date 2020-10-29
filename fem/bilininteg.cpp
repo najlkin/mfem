@@ -2180,6 +2180,7 @@ void VectorDiffusionIntegrator::AssembleElementMatrix(
    }
 
    elmat = 0.0;
+   pelmat = 0.0;
 
    for (int i = 0; i < ir -> GetNPoints(); i++)
    {
