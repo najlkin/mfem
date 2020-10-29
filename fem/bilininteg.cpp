@@ -2150,11 +2150,14 @@ void VectorDiffusionIntegrator::AssembleElementMatrix(
    DenseMatrix &elmat)
 {
    int dim = el.GetDim();
+   int spaceDim = Trans.GetSpaceDim();
    int dof = el.GetDof();
-
    double norm;
 
-   elmat.SetSize (dim * dof);
+   // If vdim is not set, set it to the space dimension
+   vdim = (vdim == -1) ? spaceDim : vdim;
+
+   elmat.SetSize (vdim * dof);
 
    Jinv.  SetSize (dim);
    dshape.SetSize (dof, dim);
@@ -2190,23 +2193,17 @@ void VectorDiffusionIntegrator::AssembleElementMatrix(
 
       Mult (dshape, Jinv, gshape);
 
-      MultAAt (gshape, pelmat);
-
       if (Q)
       {
          norm *= Q -> Eval (Trans, ip);
       }
 
-      pelmat *= norm;
+      AddMult_a_AAt(norm, gshape, pelmat);
+   }
 
-      for (int d = 0; d < dim; d++)
-      {
-         for (int k = 0; k < dof; k++)
-            for (int l = 0; l < dof; l++)
-            {
-               elmat (dof*d+k, dof*d+l) += pelmat (k, l);
-            }
-      }
+   for (int d = 0; d < vdim; d++)
+   {
+      elmat.AddMatrix(pelmat, dof*d, dof*d);
    }
 }
 

@@ -2187,6 +2187,7 @@ class VectorDiffusionIntegrator : public BilinearFormIntegrator
 {
 protected:
    Coefficient *Q;
+   int vdim;
 
 private:
    DenseMatrix Jinv;
@@ -2195,8 +2196,11 @@ private:
    DenseMatrix pelmat;
 
 public:
-   VectorDiffusionIntegrator() { Q = NULL; }
-   VectorDiffusionIntegrator(Coefficient &q) { Q = &q; }
+   VectorDiffusionIntegrator(int _vdim = -1) { Q = NULL; vdim = _vdim; }
+   VectorDiffusionIntegrator(Coefficient &q, int _vdim = -1) { Q = &q; vdim = _vdim; }
+
+   int GetVDim() const { return vdim; }
+   void SetVDim(int vdim) { this->vdim = vdim; }
 
    virtual void AssembleElementMatrix(const FiniteElement &el,
                                       ElementTransformation &Trans,
