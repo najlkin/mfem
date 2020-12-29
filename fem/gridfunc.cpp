@@ -371,13 +371,24 @@ void GridFunction::GetNodalValues(int i, Array<double> &nval, int vdim) const
 
    if (FElem->GetRangeType() == FiniteElement::SCALAR)
    {
-      MFEM_ASSERT(FElem->GetMapType() == FiniteElement::VALUE,
-                  "invalid FE map type");
       Vector shape(dof);
-      for (k = 0; k < n; k++)
+      if (FElem->GetMapType() == FiniteElement::VALUE)
       {
-         FElem->CalcShape(ElemVert->IntPoint(k), shape);
-         nval[k] = shape * ((const double *)loc_data + dof * vdim);
+         for (k = 0; k < n; k++)
+         {
+            FElem->CalcShape(ElemVert->IntPoint(k), shape);
+            nval[k] = shape * ((const double *)loc_data + dof * vdim);
+         }
+      }
+      else
+      {
+         ElementTransformation *Tr = fes->GetElementTransformation(i);
+         for (k = 0; k < n; k++)
+         {
+            Tr->SetIntPoint(&(ElemVert->IntPoint(k)));
+            FElem->CalcPhysShape(*Tr, shape);
+            nval[k] = shape * ((const double *)loc_data + dof * vdim);
+         }
       }
    }
    else
@@ -401,8 +412,16 @@ const
    fes->DofsToVDofs(vdim-1, dofs);
    Vector DofVal(dofs.Size()), LocVec;
    const FiniteElement *fe = fes->GetFE(i);
-   MFEM_ASSERT(fe->GetMapType() == FiniteElement::VALUE, "invalid FE map type");
-   fe->CalcShape(ip, DofVal);
+   if (fe->GetMapType() == FiniteElement::VALUE)
+   {
+      fe->CalcShape(ip, DofVal);
+   }
+   else
+   {
+      ElementTransformation *Tr = fes->GetElementTransformation(i);
+      Tr->SetIntPoint(&ip);
+      fe->CalcPhysShape(*Tr, DofVal);
+   }
    GetSubVector(dofs, LocVec);
 
    return (DofVal * LocVec);
@@ -419,10 +438,10 @@ void GridFunction::GetVectorValue(int i, const IntegrationPoint &ip,
    GetSubVector(vdofs, loc_data);
    if (FElem->GetRangeType() == FiniteElement::SCALAR)
    {
-      MFEM_ASSERT(FElem->GetMapType() == FiniteElement::VALUE,
-                  "invalid FE map type");
       Vector shape(dof);
-      FElem->CalcShape(ip, shape);
+      ElementTransformation *Tr = fes->GetElementTransformation(i);
+      Tr->SetIntPoint(&ip);
+      FElem->CalcPhysShape(*Tr, shape);
       int vdim = fes->GetVDim();
       val.SetSize(vdim);
       for (int k = 0; k < vdim; k++)
@@ -632,15 +651,26 @@ const
    fes->GetElementDofs(i, dofs);
    fes->DofsToVDofs(vdim-1, dofs);
    const FiniteElement *FElem = fes->GetFE(i);
-   MFEM_ASSERT(FElem->GetMapType() == FiniteElement::VALUE,
-               "invalid FE map type");
    int dof = FElem->GetDof();
    Vector DofVal(dof), loc_data(dof);
    GetSubVector(dofs, loc_data);
-   for (int k = 0; k < n; k++)
+   if (FElem->GetMapType() == FiniteElement::VALUE)
    {
-      FElem->CalcShape(ir.IntPoint(k), DofVal);
-      vals(k) = DofVal * loc_data;
+      for (int k = 0; k < n; k++)
+      {
+         FElem->CalcShape(ir.IntPoint(k), DofVal);
+         vals(k) = DofVal * loc_data;
+      }
+   }
+   else
+   {
+      ElementTransformation *Tr = fes->GetElementTransformation(i);
+      for (int k = 0; k < n; k++)
+      {
+         Tr->SetIntPoint(&(ir.IntPoint(k)));
+         FElem->CalcPhysShape(*Tr, DofVal);
+         vals(k) = DofVal * loc_data;
+      }
    }
 }
 
@@ -830,15 +860,14 @@ void GridFunction::GetVectorValues(ElementTransformation &T,
    int nip = ir.GetNPoints();
    if (FElem->GetRangeType() == FiniteElement::SCALAR)
    {
-      MFEM_ASSERT(FElem->GetMapType() == FiniteElement::VALUE,
-                  "invalid FE map type");
       Vector shape(dof);
       int vdim = fes->GetVDim();
       vals.SetSize(vdim, nip);
       for (int j = 0; j < nip; j++)
       {
          const IntegrationPoint &ip = ir.IntPoint(j);
-         FElem->CalcShape(ip, shape);
+         T.SetIntPoint(&ip);
+         FElem->CalcPhysShape(T, shape);
          for (int k = 0; k < vdim; k++)
          {
             vals(k,j) = shape * ((const double *)loc_data + dof * k);
