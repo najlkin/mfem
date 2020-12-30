@@ -666,7 +666,8 @@ double DiffusionIntegrator::ComputeFluxEnergy
    for (int i = 0; i < ir->GetNPoints(); i++)
    {
       const IntegrationPoint &ip = ir->IntPoint(i);
-      fluxelem.CalcShape(ip, shape);
+      Trans.SetIntPoint(&ip);
+      fluxelem.CalcPhysShape(Trans, shape);
 
       pointflux = 0.0;
       for (int k = 0; k < spaceDim; k++)
@@ -677,7 +678,6 @@ double DiffusionIntegrator::ComputeFluxEnergy
          }
       }
 
-      Trans.SetIntPoint(&ip);
       double w = Trans.Weight() * ip.weight;
 
       if (!MQ)
@@ -749,9 +749,9 @@ void MassIntegrator::AssembleElementMatrix
    for (int i = 0; i < ir->GetNPoints(); i++)
    {
       const IntegrationPoint &ip = ir->IntPoint(i);
-      el.CalcShape(ip, shape);
-
       Trans.SetIntPoint (&ip);
+      el.CalcPhysShape(Trans, shape);
+
       w = Trans.Weight() * ip.weight;
       if (Q)
       {
@@ -785,10 +785,10 @@ void MassIntegrator::AssembleElementMatrix2(
    for (int i = 0; i < ir->GetNPoints(); i++)
    {
       const IntegrationPoint &ip = ir->IntPoint(i);
-      trial_fe.CalcShape(ip, shape);
-      test_fe.CalcShape(ip, te_shape);
-
       Trans.SetIntPoint (&ip);
+      trial_fe.CalcPhysShape(Trans, shape);
+      test_fe.CalcPhysShape(Trans, te_shape);
+
       w = Trans.Weight() * ip.weight;
       if (Q)
       {
@@ -845,7 +845,8 @@ void BoundaryMassIntegrator::AssembleFaceMatrix(
       const IntegrationPoint &ip = ir->IntPoint(i);
       IntegrationPoint eip;
       Trans.Loc1.Transform(ip, eip);
-      el1.CalcShape(eip, shape);
+      Trans.Elem1->SetIntPoint(&ip);
+      el1.CalcPhysShape(*Trans.Elem1, shape);
 
       Trans.Face->SetIntPoint(&ip);
       w = Trans.Face->Weight() * ip.weight;
@@ -1003,9 +1004,9 @@ void VectorMassIntegrator::AssembleElementMatrix
    for (int s = 0; s < ir->GetNPoints(); s++)
    {
       const IntegrationPoint &ip = ir->IntPoint(s);
-      el.CalcShape(ip, shape);
-
       Trans.SetIntPoint (&ip);
+      el.CalcPhysShape(Trans, shape);
+
       norm = ip.weight * Trans.Weight();
 
       MultVVt(shape, partelmat);
@@ -1087,10 +1088,10 @@ void VectorMassIntegrator::AssembleElementMatrix2(
    for (int s = 0; s < ir->GetNPoints(); s++)
    {
       const IntegrationPoint &ip = ir->IntPoint(s);
-      trial_fe.CalcShape(ip, shape);
-      test_fe.CalcShape(ip, te_shape);
-
       Trans.SetIntPoint(&ip);
+      trial_fe.CalcPhysShape(Trans, shape);
+      test_fe.CalcPhysShape(Trans, te_shape);
+
       norm = ip.weight * Trans.Weight();
 
       MultVWt(te_shape, shape, partelmat);
@@ -1139,6 +1140,9 @@ void VectorFEDivergenceIntegrator::AssembleElementMatrix2(
    divshape.SetSize(trial_nd);
    shape.SetSize(test_nd);
 #endif
+
+   MFEM_ASSERT(test_fe.GetMapType() == FiniteElement::VALUE,
+      "Only value-based scalar finite elements are supported");
 
    elmat.SetSize(test_nd, trial_nd);
 
@@ -1259,6 +1263,9 @@ void VectorFECurlIntegrator::AssembleElementMatrix2(
    MFEM_ASSERT(trial_fe.GetMapType() == mfem::FiniteElement::H_CURL ||
                test_fe.GetMapType() == mfem::FiniteElement::H_CURL,
                "At least one of the finite elements must be in H(Curl)");
+   MFEM_ASSERT(trial_fe.GetMapType() == FiniteElement::VALUE ||
+               test_fe.GetMapType() == FiniteElement::VALUE,
+      "Only value-based scalar finite elements are supported");
 
    int curl_nd, vec_nd;
    if ( trial_fe.GetMapType() == mfem::FiniteElement::H_CURL )
@@ -1483,7 +1490,7 @@ void DerivativeIntegrator::AssembleElementMatrix2 (
       det = Trans.Weight();
       Mult (dshape, invdfdx, dshapedxt);
 
-      test_fe.CalcShape(ip, shape);
+      test_fe.CalcPhysShape(Trans, shape);
 
       for (l = 0; l < trial_nd; l++)
       {
@@ -1880,6 +1887,9 @@ void VectorFEMassIntegrator::AssembleElementMatrix2(
       int test_dof = test_fe.GetDof();
       double w;
 
+      MFEM_ASSERT(test_fe.GetMapType() == FiniteElement::VALUE,
+         "Only value-based scalar finite elements are supported");
+
       if (MQ)
          mfem_error("VectorFEMassIntegrator::AssembleElementMatrix2(...)\n"
                     "   is not implemented for tensor materials");
@@ -1936,6 +1946,9 @@ void VectorFEMassIntegrator::AssembleElementMatrix2(
       int trial_dof = trial_fe.GetDof();
       int test_dof = test_fe.GetDof();
       double w;
+
+      MFEM_ASSERT(test_fe.GetMapType() == FiniteElement::VALUE,
+         "Only value-based scalar finite elements are supported");
 
       if (VQ || MQ)
          mfem_error("VectorFEMassIntegrator::AssembleElementMatrix2(...)\n"
@@ -2076,11 +2089,11 @@ void VectorDivergenceIntegrator::AssembleElementMatrix2(
    for (int i = 0; i < ir -> GetNPoints(); i++)
    {
       const IntegrationPoint &ip = ir->IntPoint(i);
+      Trans.SetIntPoint (&ip);
 
       trial_fe.CalcDShape (ip, dshape);
-      test_fe.CalcShape (ip, shape);
+      test_fe.CalcPhysShape (Trans, shape);
 
-      Trans.SetIntPoint (&ip);
       CalcAdjugate(Trans.Jacobian(), Jadj);
 
       Mult (dshape, Jadj, gshape);
@@ -2457,11 +2470,11 @@ double ElasticityIntegrator::ComputeFluxEnergy(const FiniteElement &fluxelem,
    for (int i = 0; i < ir->GetNPoints(); i++)
    {
       const IntegrationPoint &ip = ir->IntPoint(i);
-      fluxelem.CalcShape(ip, shape);
+      Trans.SetIntPoint(&ip);
+      fluxelem.CalcPhysShape(Trans, shape);
 
       flux_mat.MultTranspose(shape, pointstress);
 
-      Trans.SetIntPoint(&ip);
       double w = Trans.Weight() * ip.weight;
 
       M = mu->Eval(Trans, ip);
@@ -2561,14 +2574,15 @@ void DGTraceIntegrator::AssembleFaceMatrix(const FiniteElement &el1,
       const IntegrationPoint &ip = ir->IntPoint(p);
       IntegrationPoint eip1, eip2;
       Trans.Loc1.Transform(ip, eip1);
+      Trans.Elem1->SetIntPoint(&eip1);
       if (ndof2)
       {
          Trans.Loc2.Transform(ip, eip2);
+         Trans.Elem2->SetIntPoint(&eip2);
       }
-      el1.CalcShape(eip1, shape1);
+      el1.CalcPhysShape(*Trans.Elem1, shape1);
 
       Trans.Face->SetIntPoint(&ip);
-      Trans.Elem1->SetIntPoint(&eip1);
 
       u->Eval(vu, *Trans.Elem1, eip1);
 
@@ -2616,7 +2630,7 @@ void DGTraceIntegrator::AssembleFaceMatrix(const FiniteElement &el1,
 
       if (ndof2)
       {
-         el2.CalcShape(eip2, shape2);
+         el2.CalcPhysShape(*Trans.Elem2, shape2);
 
          if (w != 0.0)
             for (int i = 0; i < ndof2; i++)
@@ -2703,15 +2717,16 @@ void DGTraceIntegrator::AssembleFaceMatrix(const FiniteElement &trial_fe1,
       const IntegrationPoint &ip = ir->IntPoint(p);
       IntegrationPoint eip1, eip2;
       Trans.Loc1.Transform(ip, eip1);
+      Trans.Elem1->SetIntPoint(&eip1);
       if (tr_ndof2 && te_ndof2)
       {
          Trans.Loc2.Transform(ip, eip2);
+         Trans.Elem2->SetIntPoint(&eip2);
       }
-      trial_fe1.CalcShape(eip1, tr_shape1);
-      test_fe1.CalcShape(eip1, te_shape1);
+      trial_fe1.CalcPhysShape(*Trans.Elem1, tr_shape1);
+      test_fe1.CalcPhysShape(*Trans.Elem1, te_shape1);
 
       Trans.Face->SetIntPoint(&ip);
-      Trans.Elem1->SetIntPoint(&eip1);
 
       u->Eval(vu, *Trans.Elem1, eip1);
 
@@ -2759,8 +2774,8 @@ void DGTraceIntegrator::AssembleFaceMatrix(const FiniteElement &trial_fe1,
 
       if (tr_ndof2 && te_ndof2)
       {
-         trial_fe2.CalcShape(eip2, tr_shape2);
-         test_fe2.CalcShape(eip2, te_shape2);
+         trial_fe2.CalcPhysShape(*Trans.Elem2, tr_shape2);
+         test_fe2.CalcPhysShape(*Trans.Elem2, te_shape2);
 
          if (w != 0.0)
             for (int i = 0; i < te_ndof2; i++)
@@ -3301,14 +3316,14 @@ void TraceJumpIntegrator::AssembleFaceMatrix(
       trial_face_fe.CalcShape(ip, face_shape);
       // Side 1 finite element shape function
       Trans.Loc1.Transform(ip, eip1);
-      test_fe1.CalcShape(eip1, shape1);
       Trans.Elem1->SetIntPoint(&eip1);
+      test_fe1.CalcPhysShape(*Trans.Elem1, shape1);
       if (ndof2)
       {
          // Side 2 finite element shape function
          Trans.Loc2.Transform(ip, eip2);
-         test_fe2.CalcShape(eip2, shape2);
          Trans.Elem2->SetIntPoint(&eip2);
+         test_fe2.CalcPhysShape(*Trans.Elem2, shape2);
       }
       w = ip.weight;
       if (trial_face_fe.GetMapType() == FiniteElement::VALUE)
