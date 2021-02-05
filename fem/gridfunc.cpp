@@ -3024,7 +3024,7 @@ void GridFunction::ProjectBdrCoefficient(VectorCoefficient &vcoeff,
    AccumulateAndCountBdrValues(NULL, &vcoeff, attr, values_counter);
    ComputeMeans(ARITHMETIC, values_counter);
 
-#ifdef MFEM_DEBUG
+/*#ifdef MFEM_DEBUG
    Array<int> ess_vdofs_marker;
    fes->GetEssentialVDofs(attr, ess_vdofs_marker);
    for (int i = 0; i < values_counter.Size(); i++)
@@ -3032,7 +3032,7 @@ void GridFunction::ProjectBdrCoefficient(VectorCoefficient &vcoeff,
       MFEM_ASSERT(bool(values_counter[i]) == bool(ess_vdofs_marker[i]),
                   "internal error");
    }
-#endif
+#endif*/
 }
 
 void GridFunction::ProjectBdrCoefficient(Coefficient *coeff[], Array<int> &attr)
@@ -3042,7 +3042,7 @@ void GridFunction::ProjectBdrCoefficient(Coefficient *coeff[], Array<int> &attr)
    AccumulateAndCountBdrValues(coeff, NULL, attr, values_counter);
    ComputeMeans(ARITHMETIC, values_counter);
 
-#ifdef MFEM_DEBUG
+/*#ifdef MFEM_DEBUG
    Array<int> ess_vdofs_marker;
    fes->GetEssentialVDofs(attr, ess_vdofs_marker);
    for (int i = 0; i < values_counter.Size(); i++)
@@ -3050,7 +3050,7 @@ void GridFunction::ProjectBdrCoefficient(Coefficient *coeff[], Array<int> &attr)
       MFEM_ASSERT(bool(values_counter[i]) == bool(ess_vdofs_marker[i]),
                   "internal error");
    }
-#endif
+#endif*/
 }
 
 void GridFunction::ProjectBdrCoefficientNormal(
