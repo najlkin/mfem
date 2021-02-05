@@ -3629,6 +3629,11 @@ GridFunction *Extrude1DGridFunction(Mesh *mesh, Mesh *mesh2d,
    {
       solfec2d = new L2_FECollection(atoi(name + 7), 2);
    }
+   else if (!strncmp(name, "L2Int_", 6))
+   {
+      // use value-based L2_FECollection
+      solfec2d = new L2_FECollection(atoi(name + 7), 2);
+   }
    else
    {
       mfem::err << "Extrude1DGridFunction : unknown FE collection : "
