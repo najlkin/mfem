@@ -922,12 +922,16 @@ protected:
 
    // Assuming mesh and order are set, construct the members: int_rule,
    // element_offsets, and size.
-   void Construct();
+   void Construct(IntegrationRules &int_rules = IntRules);
 
 public:
    /// Create a QuadratureSpace based on the global rules from #IntRules.
    QuadratureSpace(Mesh *mesh_, int order_)
       : mesh(mesh_), order(order_) { Construct(); }
+
+   /// Create a QuadratureSpace based on the rules from @a int_rules.
+   QuadratureSpace(Mesh *mesh_, int order_, IntegrationRules &int_rules)
+      : mesh(mesh_), order(order_) { Construct(int_rules); }
 
    /// Read a QuadratureSpace from the stream @a in.
    QuadratureSpace(Mesh *mesh_, std::istream &in);

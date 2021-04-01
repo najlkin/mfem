@@ -3176,7 +3176,7 @@ FiniteElementCollection *FiniteElementSpace::Load(Mesh *m, std::istream &input)
 }
 
 
-void QuadratureSpace::Construct()
+void QuadratureSpace::Construct(IntegrationRules &int_rules)
 {
    // protected method
    int offset = 0;
@@ -3192,7 +3192,7 @@ void QuadratureSpace::Construct()
       int geom = mesh->GetElementBaseGeometry(i);
       if (int_rule[geom] == NULL)
       {
-         int_rule[geom] = &IntRules.Get(geom, order);
+         int_rule[geom] = &int_rules.Get(geom, order);
       }
       offset += int_rule[geom]->GetNPoints();
    }
