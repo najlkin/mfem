@@ -4345,6 +4345,81 @@ QuadratureFunction & QuadratureFunction::operator=(const QuadratureFunction &v)
    return this->operator=((const Vector &)v);
 }
 
+void QuadratureFunction::ProjectGridFunction(const GridFunction &gf)
+{
+   Mesh *mesh = qspace->GetMesh();
+   const int nfe = mesh->GetNE();
+   DenseMatrix loc;
+   for (int i = 0; i < nfe; i++)
+   {
+      ElementTransformation *Tr = mesh->GetElementTransformation(i);
+      GetElementValues(i, loc);
+      const IntegrationRule &ir = qspace->GetElementIntRule(i);
+      gf.GetVectorValues(*Tr, ir, loc);
+   }
+}
+
+void QuadratureFunction::ProjectCoefficient(Coefficient &coeff)
+{
+   MFEM_ASSERT(vdim == 1,
+               "Scalar coefficient can be projected only onto scalar quadrature function.");
+   Mesh *mesh = qspace->GetMesh();
+   const int nfe = mesh->GetNE();
+   Vector loc;
+   for (int i = 0; i < nfe; i++)
+   {
+      ElementTransformation *Tr = mesh->GetElementTransformation(i);
+      GetElementValues(i, loc);
+      const IntegrationRule &ir = qspace->GetElementIntRule(i);
+      const int nqp = ir.GetNPoints();
+      for (int q = 0; q < nqp; q++)
+      {
+         const IntegrationPoint &ip = ir.IntPoint(q);
+         Tr->SetIntPoint(&ip);
+         loc(q) = coeff.Eval(*Tr, ip);
+      }
+   }
+}
+
+void QuadratureFunction::ProjectCoefficient(VectorCoefficient &vcoeff)
+{
+   MFEM_ASSERT(vdim == vcoeff.GetVDim(),
+               "Vector coefficient and quadrature function dimension mismatch.");
+   Mesh *mesh = qspace->GetMesh();
+   const int nfe = mesh->GetNE();
+   DenseMatrix loc;
+   for (int i = 0; i < nfe; i++)
+   {
+      ElementTransformation *Tr = mesh->GetElementTransformation(i);
+      GetElementValues(i, loc);
+      const IntegrationRule &ir = qspace->GetElementIntRule(i);
+      vcoeff.Eval(loc, *Tr, ir);
+   }
+}
+
+void QuadratureFunction::ProjectCoefficient(Coefficient* coeff[])
+{
+   Mesh *mesh = qspace->GetMesh();
+   const int nfe = mesh->GetNE();
+   DenseMatrix loc;
+   for (int i = 0; i < nfe; i++)
+   {
+      ElementTransformation *Tr = mesh->GetElementTransformation(i);
+      GetElementValues(i, loc);
+      const IntegrationRule &ir = qspace->GetElementIntRule(i);
+      const int nqp = ir.GetNPoints();
+      for (int q = 0; q < nqp; q++)
+      {
+         const IntegrationPoint &ip = ir.IntPoint(q);
+         Tr->SetIntPoint(&ip);
+         for (int v = 0; v < vdim; v++)
+         {
+            loc(v,q) = coeff[v]->Eval(*Tr, ip);
+         }
+      }
+   }
+}
+
 void QuadratureFunction::Save(std::ostream &out) const
 {
    qspace->Save(out);

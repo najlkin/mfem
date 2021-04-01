@@ -929,6 +929,19 @@ public:
     */
    inline void GetElementValues(int idx, DenseMatrix &values) const;
 
+   /** @brief Project the @a src GridFunction to @a this QuadratureFunction,
+       both of which must be on the same mesh. */
+   void ProjectGridFunction(const GridFunction &src);
+
+   /// Projects the @a coeff Coefficient to @a this QuadratureFunction
+   void ProjectCoefficient(Coefficient &coeff);
+
+   /// Projects the @a vcoeff VectorCoefficient to @a this QuadratureFunction
+   void ProjectCoefficient(VectorCoefficient &coeff);
+
+   /// Projects the @a coeff Coefficient%s to @a this QuadratureFunction
+   void ProjectCoefficient(Coefficient *coeff[]);
+
    /// Write the QuadratureFunction to the stream @a out.
    void Save(std::ostream &out) const;
 };
