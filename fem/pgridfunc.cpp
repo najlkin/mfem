@@ -625,7 +625,7 @@ void ParGridFunction::ProjectBdrCoefficient(
       }
    }
 
-#ifdef MFEM_DEBUG
+/*#ifdef MFEM_DEBUG
    Array<int> ess_vdofs_marker;
    pfes->GetEssentialVDofs(attr, ess_vdofs_marker);
    for (int i = 0; i < values_counter.Size(); i++)
@@ -634,7 +634,7 @@ void ParGridFunction::ProjectBdrCoefficient(
                   bool(values_counter[i]) == bool(ess_vdofs_marker[i]),
                   "internal error");
    }
-#endif
+#endif*/
 }
 
 void ParGridFunction::ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
@@ -664,7 +664,7 @@ void ParGridFunction::ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
       }
    }
 
-#ifdef MFEM_DEBUG
+/*#ifdef MFEM_DEBUG
    Array<int> ess_vdofs_marker;
    pfes->GetEssentialVDofs(bdr_attr, ess_vdofs_marker);
    for (int i = 0; i < values_counter.Size(); i++)
@@ -673,7 +673,7 @@ void ParGridFunction::ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
                   bool(values_counter[i]) == bool(ess_vdofs_marker[i]),
                   "internal error");
    }
-#endif
+#endif*/
 }
 
 double ParGridFunction::ComputeDGFaceJumpError(Coefficient *exsol,
