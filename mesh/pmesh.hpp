@@ -315,16 +315,16 @@ public:
    int GetNGroups() const { return gtopo.NGroups(); }
 
    ///@{ @name These methods require group > 0
-   int GroupNVertices(int group) { return group_svert.RowSize(group-1); }
-   int GroupNEdges(int group)    { return group_sedge.RowSize(group-1); }
-   int GroupNTriangles(int group) { return group_stria.RowSize(group-1); }
-   int GroupNQuadrilaterals(int group) { return group_squad.RowSize(group-1); }
+   int GroupNVertices(int group) const { return group_svert.RowSize(group-1); }
+   int GroupNEdges(int group) const   { return group_sedge.RowSize(group-1); }
+   int GroupNTriangles(int group) const { return group_stria.RowSize(group-1); }
+   int GroupNQuadrilaterals(int group) const { return group_squad.RowSize(group-1); }
 
-   int GroupVertex(int group, int i)
+   int GroupVertex(int group, int i) const
    { return svert_lvert[group_svert.GetRow(group-1)[i]]; }
-   void GroupEdge(int group, int i, int &edge, int &o);
-   void GroupTriangle(int group, int i, int &face, int &o);
-   void GroupQuadrilateral(int group, int i, int &face, int &o);
+   void GroupEdge(int group, int i, int &edge, int &o) const;
+   void GroupTriangle(int group, int i, int &face, int &o) const;
+   void GroupQuadrilateral(int group, int i, int &face, int &o) const;
    ///@}
 
    void GenerateOffsets(int N, HYPRE_BigInt loc_sizes[],

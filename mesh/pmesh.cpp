@@ -1589,7 +1589,7 @@ void ParMesh::SetAttributes()
    }
 }
 
-void ParMesh::GroupEdge(int group, int i, int &edge, int &o)
+void ParMesh::GroupEdge(int group, int i, int &edge, int &o) const
 {
    int sedge = group_sedge.GetRow(group-1)[i];
    edge = sedge_ledge[sedge];
@@ -1597,7 +1597,7 @@ void ParMesh::GroupEdge(int group, int i, int &edge, int &o)
    o = (v[0] < v[1]) ? (+1) : (-1);
 }
 
-void ParMesh::GroupTriangle(int group, int i, int &face, int &o)
+void ParMesh::GroupTriangle(int group, int i, int &face, int &o) const
 {
    int stria = group_stria.GetRow(group-1)[i];
    face = sface_lface[stria];
@@ -1608,7 +1608,7 @@ void ParMesh::GroupTriangle(int group, int i, int &face, int &o)
    o = GetTriOrientation(faces[face]->GetVertices(), shared_trias[stria].v);
 }
 
-void ParMesh::GroupQuadrilateral(int group, int i, int &face, int &o)
+void ParMesh::GroupQuadrilateral(int group, int i, int &face, int &o) const
 {
    int squad = group_squad.GetRow(group-1)[i];
    face = sface_lface[shared_trias.Size()+squad];
