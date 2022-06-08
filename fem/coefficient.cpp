@@ -1072,7 +1072,7 @@ void VectorQuadratureFunctionCoefficient::Eval(Vector &V,
 }
 
 QuadratureFunctionCoefficient::QuadratureFunctionCoefficient(
-   QuadratureFunction &qf) : QuadF(qf)
+   const QuadratureFunction &qf) : QuadF(qf)
 {
    MFEM_VERIFY(qf.GetVDim() == 1, "QuadratureFunction's vdim must be 1");
 }

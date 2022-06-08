@@ -1842,7 +1842,7 @@ private:
 
 public:
    /// Constructor with a quadrature function as input
-   QuadratureFunctionCoefficient(QuadratureFunction &qf);
+   QuadratureFunctionCoefficient(const QuadratureFunction &qf);
 
    const QuadratureFunction& GetQuadFunction() const { return QuadF; }
 
