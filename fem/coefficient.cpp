@@ -1030,7 +1030,7 @@ double ComputeGlobalLpNorm(double p, VectorCoefficient &coeff, ParMesh &pmesh,
 #endif
 
 VectorQuadratureFunctionCoefficient::VectorQuadratureFunctionCoefficient(
-   QuadratureFunction &qf)
+   const QuadratureFunction &qf)
    : VectorCoefficient(qf.GetVDim()), QuadF(qf), index(0) { }
 
 void VectorQuadratureFunctionCoefficient::SetComponent(int index_, int length_)
