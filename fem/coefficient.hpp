@@ -166,6 +166,9 @@ public:
    /// Evaluate the coefficient at @a ip.
    virtual double Eval(ElementTransformation &T,
                        const IntegrationPoint &ip);
+
+    const std::function<double(const Vector &)>& GetFunction() const { return Function; }
+    const std::function<double(const Vector &,double)>& GetTDFunction() const { return TDFunction; }
 };
 
 class GridFunction;
@@ -505,6 +508,9 @@ public:
    /// Evaluate the vector coefficient at @a ip.
    virtual void Eval(Vector &V, ElementTransformation &T,
                      const IntegrationPoint &ip);
+
+   const std::function<void(const Vector &, Vector &)>& GetFunction() const { return Function; }
+   const std::function<void(const Vector &, double, Vector &)>& GetTDFunction() const { return TDFunction; }
 
    virtual ~VectorFunctionCoefficient() { }
 };
