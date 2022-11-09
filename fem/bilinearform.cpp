@@ -2222,6 +2222,7 @@ void MixedBilinearForm::Update()
    mat = NULL;
    delete mat_e;
    mat_e = NULL;
+   FreeElementMatrices();
    height = test_fes->GetVSize();
    width = trial_fes->GetVSize();
    if (ext) { ext->Update(); }
