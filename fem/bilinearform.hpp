@@ -1008,6 +1008,9 @@ public:
    /// Read-only access to the associated test FiniteElementSpace.
    const FiniteElementSpace *TestFESpace() const { return test_fes; }
 
+   /// Indicate that integrators are not owned by the MixedBilinearForm
+   void UseExternalIntegrators() { extern_bfs = 1; }
+
    virtual ~MixedBilinearForm();
 };
 
