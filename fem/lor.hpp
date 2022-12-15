@@ -67,7 +67,7 @@ protected:
    FiniteElementSpace *fes;
    BilinearForm *a;
    OperatorHandle A;
-   mutable Array<int> perm;
+   mutable Array<int> perm, l_perm;
    bool nonconforming = false;
 
    /// Constructs the local DOF (ldof) permutation. In parallel this is used as
@@ -110,6 +110,8 @@ public:
    /// nontrivial. Returns an array @a perm such that, given an index @a i of a
    /// %LOR dof, @a perm[i] is the index of the corresponding HO dof.
    const Array<int> &GetDofPermutation() const;
+
+   const Array<int> &GetLocalDofPermutation() const;
 
    /// Returns true if the %LOR spaces requires a DOF permutation (if the
    /// corresponding %LOR and HO DOFs are numbered differently), false
