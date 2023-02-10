@@ -1667,9 +1667,10 @@ void MixedBilinearForm::Assemble (int skip_zeros)
          ftr = mesh->GetBdrFaceTransformations(i);
          if (ftr)
          {
-            trial_fes->GetFaceVDofs(ftr->ElementNo, tr_vdofs);
+            const int iface = mesh->GetBdrFace(i);
+            trial_fes->GetFaceVDofs(iface, tr_vdofs);
             test_fes->GetElementVDofs(ftr->Elem1No, te_vdofs);
-            trial_face_fe = trial_fes->GetFaceElement(ftr->ElementNo);
+            trial_face_fe = trial_fes->GetFaceElement(iface);
             test_fe1 = test_fes->GetFE(ftr->Elem1No);
             // The test_fe2 object is really a dummy and not used on the
             // boundaries, but we can't dereference a NULL pointer, and we don't
@@ -2026,13 +2027,13 @@ void MixedBilinearForm::ComputeBdrTraceFaceElementMatrix(int i,
    Mesh *mesh = test_fes -> GetMesh();
    ftr = mesh->GetBdrFaceTransformations(i);
    MFEM_ASSERT(ftr, "No associated boundary face.");
+   const int iface = mesh->GetBdrFace(i);
 
    if (boundary_trace_face_integs.Size())
    {
       const FiniteElement *trial_face_fe, *test_fe1, *test_fe2;
 
-      ftr = mesh->GetBdrFaceTransformations(i);
-      trial_face_fe = trial_fes->GetFaceElement(ftr->Face->ElementNo);
+      trial_face_fe = trial_fes->GetFaceElement(iface);
       test_fe1 = test_fes->GetFE(ftr->Elem1No);
       // The test_fe2 object is really a dummy and not used on the
       // boundaries, but we can't dereference a NULL pointer, and we don't
@@ -2051,7 +2052,7 @@ void MixedBilinearForm::ComputeBdrTraceFaceElementMatrix(int i,
    }
    else
    {
-      trial_fes->GetFaceVDofs(ftr->Face->ElementNo, trial_vdofs);
+      trial_fes->GetFaceVDofs(iface, trial_vdofs);
       test_fes->GetElementVDofs(ftr->Elem1No, test_vdofs);
       elmat.SetSize(test_vdofs.Size(), trial_vdofs.Size());
       elmat = 0.0;
