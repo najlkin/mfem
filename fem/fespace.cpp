@@ -3199,8 +3199,7 @@ void QuadratureSpace::Construct(IntegrationRules &int_rules)
    element_offsets[num_elem] = size = offset;
 }
 
-QuadratureSpace::QuadratureSpace(Mesh *mesh_, std::istream &in)
-   : mesh(mesh_)
+void QuadratureSpace::Load(std::istream &in)
 {
    const char *msg = "invalid input stream";
    string ident;
@@ -3225,6 +3224,58 @@ QuadratureSpace::QuadratureSpace(Mesh *mesh_, std::istream &in)
 void QuadratureSpace::Save(std::ostream &out) const
 {
    out << "QuadratureSpace\n"
+       << "Type: default_quadrature\n"
+       << "Order: " << order << '\n';
+}
+
+void BoundaryQuadratureSpace::Construct(IntegrationRules &int_rules)
+{
+   // protected method
+   int offset = 0;
+   const int num_elem = mesh->GetNBE();
+   element_offsets = new int[num_elem + 1];
+   for (int g = 0; g < Geometry::NumGeom; g++)
+   {
+      int_rule[g] = NULL;
+   }
+   for (int i = 0; i < num_elem; i++)
+   {
+      element_offsets[i] = offset;
+      int geom = mesh->GetBdrElementBaseGeometry(i);
+      if (int_rule[geom] == NULL)
+      {
+         int_rule[geom] = &int_rules.Get(geom, order);
+      }
+      offset += int_rule[geom]->GetNPoints();
+   }
+   element_offsets[num_elem] = size = offset;
+}
+
+void BoundaryQuadratureSpace::Load(std::istream &in)
+{
+   const char *msg = "invalid input stream";
+   string ident;
+
+   in >> ident; MFEM_VERIFY(ident == "BoundaryQuadratureSpace", msg);
+   in >> ident; MFEM_VERIFY(ident == "Type:", msg);
+   in >> ident;
+   if (ident == "default_quadrature")
+   {
+      in >> ident; MFEM_VERIFY(ident == "Order:", msg);
+      in >> order;
+   }
+   else
+   {
+      MFEM_ABORT("unknown QuadratureSpace type: " << ident);
+      return;
+   }
+
+   Construct();
+}
+
+void BoundaryQuadratureSpace::Save(std::ostream &out) const
+{
+   out << "BoundaryQuadratureSpace\n"
        << "Type: default_quadrature\n"
        << "Order: " << order << '\n';
 }

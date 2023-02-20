@@ -922,7 +922,11 @@ protected:
 
    // Assuming mesh and order are set, construct the members: int_rule,
    // element_offsets, and size.
-   void Construct(IntegrationRules &int_rules = IntRules);
+   virtual void Construct(IntegrationRules &int_rules = IntRules);
+
+   // Assuming mesh is set, load the order from the stream and construct
+   // the members: int_rule, element_offsets, and size.
+   virtual void Load(std::istream &in);
 
 public:
    /// Create a QuadratureSpace based on the global rules from #IntRules.
@@ -934,7 +938,8 @@ public:
       : mesh(mesh_), order(order_) { Construct(int_rules); }
 
    /// Read a QuadratureSpace from the stream @a in.
-   QuadratureSpace(Mesh *mesh_, std::istream &in);
+   QuadratureSpace(Mesh *mesh_, std::istream &in)
+      : mesh(mesh_) { Load(in); }
 
    virtual ~QuadratureSpace() { delete [] element_offsets; }
 
@@ -948,14 +953,53 @@ public:
    inline Mesh *GetMesh() const { return mesh; }
 
    /// Returns number of elements in the mesh.
-   inline int GetNE() const { return mesh->GetNE(); }
+   virtual inline int GetNE() const { return mesh->GetNE(); }
 
    /// Get the IntegrationRule associated with mesh element @a idx.
-   const IntegrationRule &GetElementIntRule(int idx) const
+   virtual const IntegrationRule &GetElementIntRule(int idx) const
    { return *int_rule[mesh->GetElementBaseGeometry(idx)]; }
 
    /// Write the QuadratureSpace to the stream @a out.
-   void Save(std::ostream &out) const;
+   virtual void Save(std::ostream &out) const;
+};
+
+/// Class representing the storage layout of a QuadratureFunction on the boundary.
+/** Multiple QuadratureFunction%s can share the same BoundaryQuadratureSpace. */
+class BoundaryQuadratureSpace : public QuadratureSpace
+{
+protected:
+   // Assuming mesh and order are set, construct the members: int_rule,
+   // element_offsets, and size.
+   virtual void Construct(IntegrationRules &int_rules = IntRules);
+
+   // Assuming mesh is set, load the order from the stream and construct
+   // the members: int_rule, element_offsets, and size.
+   virtual void Load(std::istream &in);
+
+public:
+   /// Create a BoundaryQuadratureSpace based on the global rules from #IntRules.
+   BoundaryQuadratureSpace(Mesh *mesh_, int order_)
+      : QuadratureSpace(mesh_, order_) { }
+
+   /// Create a BoundaryQuadratureSpace based on the rules from @a int_rules.
+   BoundaryQuadratureSpace(Mesh *mesh_, int order_, IntegrationRules &int_rules)
+      : QuadratureSpace(mesh_, order_, int_rules) { }
+
+   /// Read a BoundaryQuadratureSpace from the stream @a in.
+   BoundaryQuadratureSpace(Mesh *mesh_, std::istream &in)
+      : QuadratureSpace(mesh_, in) { }
+
+   virtual ~BoundaryQuadratureSpace() { }
+
+   /// Returns number of boundary elements of the mesh.
+   virtual inline int GetNE() const { return mesh->GetNBE(); }
+
+   /// Get the IntegrationRule associated with mesh element @a idx.
+   virtual const IntegrationRule &GetElementIntRule(int idx) const
+   { return *int_rule[mesh->GetBdrElementBaseGeometry(idx)]; }
+
+   /// Write the BoundaryQuadratureSpace to the stream @a out.
+   virtual void Save(std::ostream &out) const;
 };
 
 inline bool UsesTensorBasis(const FiniteElementSpace& fes)
