@@ -257,6 +257,33 @@ public:
    using LinearFormIntegrator::AssembleRHSElementVect;
 };
 
+/** Class for domain integration of L(v) := (f, div v), where
+    f is scalar and v=(v1,...,vn). */
+class VectorDomainLFDivIntegrator : public DeltaLFIntegrator
+{
+private:
+   DenseMatrix dshape, gshape;
+   Vector divshape;
+   Coefficient &Q;
+
+public:
+   /// Constructs a domain divergence integrator with a given Coefficient
+   VectorDomainLFDivIntegrator(Coefficient &QF)
+      : DeltaLFIntegrator(QF), Q(QF) { }
+
+   /** Given a particular Finite Element and a transformation (Tr)
+       computes the element right hand side element vector, elvect. */
+   virtual void AssembleRHSElementVect(const FiniteElement &el,
+                                       ElementTransformation &Tr,
+                                       Vector &elvect);
+
+   virtual void AssembleDeltaElementVect(const FiniteElement &fe,
+                                         ElementTransformation &Trans,
+                                         Vector &elvect);
+
+   using LinearFormIntegrator::AssembleRHSElementVect;
+};
+
 /** Class for boundary integration of L(v) := (g, v), where
     f=(f1,...,fn) and v=(v1,...,vn). */
 class VectorBoundaryLFIntegrator : public LinearFormIntegrator
