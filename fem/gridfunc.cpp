@@ -3171,7 +3171,8 @@ double GridFunction::ComputeL2Error(
       for (j = 0; j < ir->GetNPoints(); j++)
       {
          const IntegrationPoint &ip = ir->IntPoint(j);
-         fe->CalcShape(ip, shape);
+         transf->SetIntPoint(&ip);
+         fe->CalcPhysShape(*transf, shape);
          for (d = 0; d < fes->GetVDim(); d++)
          {
             a = 0;
@@ -3184,7 +3185,6 @@ double GridFunction::ComputeL2Error(
                {
                   a -= (*this)(-1-vdofs[fdof*d+k]) * shape(k);
                }
-            transf->SetIntPoint(&ip);
             a -= exsol[d]->Eval(*transf, ip);
             error += ip.weight * transf->Weight() * a * a;
          }
