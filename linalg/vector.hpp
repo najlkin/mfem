@@ -56,18 +56,46 @@ inline double infinity()
 using ::infinity;
 #endif
 
+/// Abstract vector data type
+class AbstractVector
+{
+protected:
+   int size;
+
+public:
+   /// Default constructor for Vector. Sets size = 0.
+   AbstractVector() { size = 0.; }
+
+   /// Creates vector of size s.
+   explicit AbstractVector(int s) { size = s; }
+
+   /// Resize the vector to size @a s.
+   virtual void SetSize(int s) { size = s; }
+
+   /// Destroy a vector
+   virtual void Destroy() { }
+
+   /// Returns the size of the vector.
+   virtual inline int Size() const { return size; }
+
+   /// Access Vector entries. Index i = 0 .. size-1.
+   virtual double &Elem(int i) = 0;
+
+   /// Read only access to Vector entries. Index i = 0 .. size-1.
+   virtual const double &Elem(int i) const = 0;
+};
+
 /// Vector data type.
-class Vector
+class Vector : public AbstractVector
 {
 protected:
 
    Memory<double> data;
-   int size;
 
 public:
 
    /// Default constructor for Vector. Sets size = 0 and data = NULL.
-   Vector() { data.Reset(); size = 0; }
+   Vector() { data.Reset(); }
 
    /// Copy constructor. Allocates a new data array and copies the data.
    Vector(const Vector &);
@@ -84,12 +112,12 @@ public:
 
    /// Create a Vector of size @a size_ using MemoryType @a mt.
    Vector(int size_, MemoryType mt)
-      : data(size_, mt), size(size_) { }
+      : AbstractVector(size_), data(size_, mt) { }
 
    /** @brief Create a Vector of size @a size_ using host MemoryType @a h_mt and
        device MemoryType @a d_mt. */
    Vector(int size_, MemoryType h_mt, MemoryType d_mt)
-      : data(size_, h_mt, d_mt), size(size_) { }
+      : AbstractVector(size_), data(size_, h_mt, d_mt) { }
 
    /// Create a vector using a braced initializer list
    template <int N>

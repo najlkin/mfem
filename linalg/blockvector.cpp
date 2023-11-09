@@ -205,4 +205,336 @@ void BlockVector::SyncFromBlocks() const
    }
 }
 
+BlockRefVector::BlockRefVector(const Array<Vector*> &blocks_, bool bown)
+{
+   blocks = blocks_;
+   block_own = bown;
+   RecalcSize();
+}
+
+BlockRefVector::BlockRefVector(const Array<Vector*> &blocks_, const Array<bool> &owns)
+{
+   blocks = blocks_;
+   block_own = owns;
+   RecalcSize();
+}
+
+BlockRefVector::BlockRefVector(const Array<int> &offsets)
+{
+   Update(offsets);
+}
+
+BlockRefVector::BlockRefVector(const BlockRefVector &orig)
+{
+   Init(orig.NumBlocks());
+   for(int i = 0; i < blocks.Size(); i++)
+      if(orig.blocks[i])
+      {
+         blocks[i] = new Vector(*orig.blocks[i]);
+         block_own[i] = true;
+      }
+   size = orig.size;
+}
+
+BlockRefVector::operator Vector()
+{
+   Vector v(Size());
+   Vector view;
+   int ioff = 0;
+   for(Vector *b : blocks)
+   {
+      if(!b)
+         continue;
+      view.MakeRef(v, ioff, b->Size());
+      view = *b;
+      ioff += b->Size();
+   }
+   return v;
+}
+
+BlockRefVector &BlockRefVector::operator=(const BlockRefVector &orig)
+{
+   for(int i = 0; i < blocks.Size(); i++)
+      if(orig.blocks[i])
+         *blocks[i] = *orig.blocks[i];
+
+   return *this;
+}
+
+BlockRefVector &BlockRefVector::operator=(const Vector &v)
+{
+   MFEM_ASSERT(v.Size() >= Size(), "Insufficiently long vector");
+   return operator=(v.GetData());
+}
+
+BlockRefVector &BlockRefVector::operator=(const double *v)
+{
+   int ioff = 0;
+   for(Vector *b : blocks)
+   {
+      if(!b)
+         continue;
+      *b = v + ioff;
+      ioff += b->Size();
+   }
+
+   return *this;
+}
+
+void BlockRefVector::SetBlock(int i, Vector *vec, bool bown)
+{
+   if(blocks[i] == vec)
+   {
+      block_own[i] = bown;
+      return;
+   }
+
+   if(blocks[i])
+   {
+      size -= blocks[i]->Size();
+      if(block_own[i])
+         delete blocks[i];
+   }
+   blocks[i] = vec;
+   block_own[i] = bown;
+   if(vec)
+      size += vec->Size();
+}
+
+double& BlockRefVector::Elem(int i)
+{
+   int b = 0;
+   int ioff = 0;
+   for(; b < blocks.Size(); b++)
+   {
+      if(!blocks[b])
+         continue;
+      if(i < ioff + blocks[b]->Size())
+         break;
+      ioff += blocks[b]->Size();
+   }
+   return blocks[b]->Elem(i-ioff);
+}
+
+const double& BlockRefVector::Elem(int i) const
+{
+   int b = 0;
+   int ioff = 0;
+   for(; b < blocks.Size(); b++)
+   {
+      if(!blocks[b])
+         continue;
+      if(i < ioff + blocks[b]->Size())
+         break;
+      ioff += blocks[b]->Size();
+   }
+   return blocks[b]->Elem(i-ioff);
+}
+
+void BlockRefVector::Update(double *data, const Array<int> &bOffsets)
+{
+   if(blocks.Size() != bOffsets.Size()-1)
+   {
+      Destroy();
+      Init(bOffsets.Size()-1);
+   }
+
+   for(int i = 0; i < bOffsets.Size()-1; i++)
+   {
+      const int size = bOffsets[i+1] - bOffsets[i];
+      if(blocks[i] && block_own[i])
+      {
+         if(blocks[i]->Size() == size
+         && blocks[i]->GetData() == data + bOffsets[i])
+            continue;
+      }
+      if(block_own[i])
+         delete blocks[i];
+      if(size > 0)
+         blocks[i] = new Vector(data + bOffsets[i], size);
+      else
+         blocks[i] = NULL;
+      block_own[i] = true;
+   }
+
+   size = bOffsets.Last();
+}
+
+
+void BlockRefVector::Update(Vector &data, const Array<int> &bOffsets)
+{
+   MFEM_ASSERT(data.Size() == bOffsets.Last(), "");
+   Update(data.GetData(), bOffsets);
+}
+
+void BlockRefVector::UpdateOwned(double *data, const Array<int> &bOffsets)
+{
+   int nowned = 0;
+   for(bool own : block_own) { if(own) nowned++; }
+
+   if(nowned != bOffsets.Size()-1)
+   {
+      Destroy();
+      Init(bOffsets.Size()-1);
+      block_own = true;
+   }
+
+   int ioff = 0;
+   bool recalc_size = false;
+   for(int i = 0; i < blocks.Size(); i++)
+   {
+      if(!block_own[i])
+         continue;
+      const int size = bOffsets[ioff+1] - bOffsets[ioff];
+      ioff++;
+      if(blocks[i])
+      {
+         if(blocks[i]->Size() == size
+         && blocks[i]->GetData() == data + bOffsets[ioff-1])
+            continue;
+      }
+      delete blocks[i];
+      if(size > 0)
+         blocks[i] = new Vector(data + bOffsets[ioff-1], size);
+      else
+         blocks[i] = NULL;
+      recalc_size = true;
+   }
+
+   if(recalc_size)
+      RecalcSize();
+}
+
+void BlockRefVector::UpdateOwned(Vector &data, const Array<int> &bOffsets)
+{
+   MFEM_ASSERT(data.Size() == bOffsets.Last(), "");
+   UpdateOwned(data.GetData(), bOffsets);
+}
+
+void BlockRefVector::Update(BlockRefVector &data)
+{
+   if(data.NumBlocks() != blocks.Size())
+   {
+      Destroy();
+      Init(data.NumBlocks());
+   }
+
+   for(int i = 0; i < data.NumBlocks(); i++)
+   {
+      const int size = data.BlockSize(i);
+      if(blocks[i])
+      {
+         if(blocks[i]->Size() == size
+         && blocks[i] == &data.GetBlock(i))
+         {
+            block_own[i] = false;
+            continue;
+         }
+      }
+      if(block_own[i])
+         delete blocks[i];
+      if(size > 0)
+         blocks[i] = &data.GetBlock(i);
+      else
+         blocks[i] = NULL;
+      block_own[i] = false;
+   }
+
+   size = data.Size();
+}
+
+void BlockRefVector::Update(const Array<int> &bOffsets)
+{
+   if(blocks.Size() != bOffsets.Size()-1)
+   {
+      Destroy();
+      Init(bOffsets.Size()-1);
+   }
+
+   for(int i = 0; i < bOffsets.Size()-1; i++)
+   {
+      const int size = bOffsets[i+1] - bOffsets[i];
+      if(blocks[i] && block_own[i])
+      {
+         if(blocks[i]->Size() == size)
+            continue;
+      }
+      if(block_own[i])
+         delete blocks[i];
+      if(size > 0)
+         blocks[i] = new Vector(size);
+      else
+         blocks[i] = NULL;
+      block_own[i] = true;
+   }
+
+   size = bOffsets.Last();
+}
+
+void BlockRefVector::UpdateOwned(const Array<int> &bOffsets)
+{
+   int nowned = 0;
+   for(bool own : block_own) { if(own) nowned++; }
+   
+   if(nowned != bOffsets.Size()-1)
+   {
+      Destroy();
+      Init(bOffsets.Size()-1);
+      block_own = true;
+   }
+
+   int ioff = 0;
+   bool recalc_size = false;
+   for(int i = 0; i < blocks.Size(); i++)
+   {
+      if(!block_own[i])
+         continue;
+      const int size = bOffsets[ioff+1] - bOffsets[ioff];
+      ioff++;
+      if(blocks[i])
+      {
+         if(blocks[i]->Size() == size)
+            continue;
+      }
+      delete blocks[i];
+      if(size > 0)
+         blocks[i] = new Vector(size);
+      else
+         blocks[i] = NULL;
+      recalc_size = true;
+   }
+
+   if(recalc_size)
+      RecalcSize();
+}
+
+void BlockRefVector::Destroy()
+{
+   for(int i = 0; i < blocks.Size(); i++)
+   {
+      if(block_own[i])
+         delete blocks[i];
+   }
+   blocks.SetSize(0);
+   block_own.SetSize(0);
+   size = 0;
+}
+
+void BlockRefVector::Init(int s)
+{
+   blocks.SetSize(s);
+   blocks = NULL;
+   block_own.SetSize(s);
+   block_own = false;
+   size = 0;
+}
+
+void BlockRefVector::RecalcSize()
+{
+   size = 0;
+   for(Vector *v : blocks)
+      if(v)
+         size += v->Size();
+}
+
 }
