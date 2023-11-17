@@ -208,12 +208,15 @@ void BlockVector::SyncFromBlocks() const
 BlockRefVector::BlockRefVector(const Array<Vector*> &blocks_, bool bown)
 {
    blocks = blocks_;
+   block_own.SetSize(blocks.Size());
    block_own = bown;
    RecalcSize();
 }
 
 BlockRefVector::BlockRefVector(const Array<Vector*> &blocks_, const Array<bool> &owns)
 {
+   MFEM_ASSERT(blocks_.Size() == owns.Size(),
+      "Different sizes the data and ownership flags!");
    blocks = blocks_;
    block_own = owns;
    RecalcSize();
