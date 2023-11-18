@@ -245,7 +245,10 @@ public:
    { if(blocks[i]) blockView.MakeRef(*blocks[i], 0, blocks[i]->Size()); }
 
    //! Check if the block is zero
-   bool IsZeroBlock(int i) { return (blocks[i] == NULL); }
+   bool IsZeroBlock(int i) const { return (blocks[i] == NULL); }
+
+   //! Check if the block is owned
+   bool IsOwnBlock(int i) const { return block_own[i]; }
 
    //! Get size of the the i-th block
    int BlockSize(int i) { return (blocks[i])?(blocks[i]->Size()):(0); }
