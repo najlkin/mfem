@@ -599,7 +599,7 @@ void ParGridFunction::ProjectDiscCoefficient(VectorCoefficient &vcoeff,
 }
 
 void ParGridFunction::ProjectBdrCoefficient(
-   Coefficient *coeff[], VectorCoefficient *vcoeff, Array<int> &attr)
+   Coefficient *coeff[], VectorCoefficient *vcoeff, const Array<int> &attr)
 {
    Array<int> values_counter;
    AccumulateAndCountBdrValues(coeff, vcoeff, attr, values_counter);
@@ -638,7 +638,7 @@ void ParGridFunction::ProjectBdrCoefficient(
 }
 
 void ParGridFunction::ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
-                                                   Array<int> &bdr_attr)
+                                                   const Array<int> &bdr_attr)
 {
    Array<int> values_counter;
    AccumulateAndCountBdrTangentValues(vcoeff, bdr_attr, values_counter);

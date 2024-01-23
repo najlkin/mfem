@@ -44,7 +44,7 @@ protected:
    Vector send_data;
 
    void ProjectBdrCoefficient(Coefficient *coeff[], VectorCoefficient *vcoeff,
-                              Array<int> &attr);
+                              const Array<int> &attr);
 
 public:
    ParGridFunction() { pfes = NULL; }
@@ -242,15 +242,16 @@ public:
 
    using GridFunction::ProjectBdrCoefficient;
 
-   virtual void ProjectBdrCoefficient(VectorCoefficient &vcoeff,
-                                      Array<int> &attr)
+   void ProjectBdrCoefficient(VectorCoefficient &vcoeff,
+                              const Array<int> &attr) override
    { ProjectBdrCoefficient(NULL, &vcoeff, attr); }
 
-   virtual void ProjectBdrCoefficient(Coefficient *coeff[], Array<int> &attr)
+   void ProjectBdrCoefficient(Coefficient *coeff[],
+                              const Array<int> &attr) override
    { ProjectBdrCoefficient(coeff, NULL, attr); }
 
-   virtual void ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
-                                             Array<int> &bdr_attr);
+   void ProjectBdrCoefficientTangent(VectorCoefficient &vcoeff,
+                                     const Array<int> &bdr_attr) override;
 
    virtual double ComputeL1Error(Coefficient *exsol[],
                                  const IntegrationRule *irs[] = NULL) const
