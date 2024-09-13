@@ -241,8 +241,9 @@ private:
 
 public:
    /// Constructs a domain integrator with a given VectorCoefficient
-   VectorDomainLFIntegrator(VectorCoefficient &QF)
-      : DeltaLFIntegrator(QF), Q(QF) { }
+   VectorDomainLFIntegrator(VectorCoefficient &QF,
+                            const IntegrationRule *ir = NULL)
+      : DeltaLFIntegrator(QF, ir), Q(QF) { }
 
    /** Given a particular Finite Element and a transformation (Tr)
        computes the element right hand side element vector, elvect. */
