@@ -791,6 +791,7 @@ public:
 
    void SetScale(double s) { d.SetScale(s); }
    void SetTol(double tol) { d.SetTol(tol); }
+   void SetWeight(Coefficient *w, bool own=true) { d.SetWeight(w, own); }
 
    void SetDirection(const Vector& d_);
    void GetDirection(Vector &d_) { d_ = dir; }
